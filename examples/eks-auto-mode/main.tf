@@ -1,5 +1,5 @@
 provider "aws" {
-  region = local.region
+  region = var.region
 }
 
 data "aws_availability_zones" "available" {
@@ -11,9 +11,7 @@ data "aws_availability_zones" "available" {
 }
 
 locals {
-  name            = "ex-${basename(path.cwd)}"
-  cluster_version = "1.31"
-  region          = "us-west-2"
+  name = "ex-${basename(path.cwd)}"
 
   vpc_cidr = "10.0.0.0/16"
   azs      = slice(data.aws_availability_zones.available.names, 0, 3)
@@ -32,14 +30,14 @@ locals {
 module "eks" {
   source = "../.."
 
-  cluster_name                   = local.name
-  cluster_version                = local.cluster_version
-  cluster_endpoint_public_access = true
+  cluster_name                   = var.cluster_name
+  cluster_version                = var.cluster_version
+  cluster_endpoint_public_access = var.cluster_endpoint_public_access
 
   enable_cluster_creator_admin_permissions = true
 
   cluster_compute_config = {
-    enabled    = true
+    enabled    = var.cluster_compute_enabled
     node_pools = ["general-purpose"]
   }
 
