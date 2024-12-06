@@ -39,7 +39,7 @@ apiVersion: v1
 clusters:
 - cluster:
     server: ${module.eks.cluster_endpoint}
-    certificate-authority-data: ${data.aws_eks_cluster.eks.certificate_authority[0].data}
+    certificate-authority-data: ${module.eks.cluster_certificate_authority_data}
   name: ${module.eks.cluster_name}
 contexts:
 - context:
@@ -52,6 +52,13 @@ preferences: {}
 users:
 - name: ${module.eks.cluster_name}
   user:
-    token: ${data.aws_eks_cluster_auth.eks.token}
+    exec:
+      apiVersion: client.authentication.k8s.io/v1beta1
+      command: aws
+      args:
+      - eks
+      - get-token
+      - --cluster-name
+      - ${module.eks.cluster_name}
 EOT
 }
