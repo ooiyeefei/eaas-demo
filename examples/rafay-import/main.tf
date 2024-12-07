@@ -35,7 +35,11 @@ resource "null_resource" "apply_bootstrap_yaml" {
   provisioner "local-exec" {
     interpreter = ["/bin/bash", "-c"]
     command     = <<EOT
-      ./kubectl --kubeconfig=${var.kubeconfig} apply -f - <<EOF
+      # Save kubeconfig to a file
+      echo "${var.kubeconfig}" > kubeconfig.yaml
+      
+      # Apply the bootstrap YAML using kubectl
+      ./kubectl --kubeconfig=kubeconfig.yaml apply -f - <<EOF
 ${rafay_import_cluster.import_cluster.bootstrap_data}
 EOF
     EOT
