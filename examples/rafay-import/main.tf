@@ -28,7 +28,8 @@ resource "null_resource" "download_kubectl" {
 # Install jq binary if not present
 resource "null_resource" "install_jq" {
   provisioner "local-exec" {
-    command = <<EOT
+    interpreter = ["/bin/bash", "-c"]
+    command     = <<EOT
       if ! command -v jq &> /dev/null; then
         echo "jq not found. Installing jq..."
         wget -q "https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64" -O jq
@@ -36,11 +37,10 @@ resource "null_resource" "install_jq" {
         sudo mv jq /usr/local/bin/ || (chmod +x jq && mv jq ~/jq && export PATH=$PATH:~)
       fi
     EOT
-    interpreter = ["/bin/bash", "-c"]
   }
 }
 
-# Apply the bootstrap YAML using kubectl
+# Extract and apply the kubeconfig
 resource "null_resource" "apply_bootstrap_yaml" {
   depends_on = [
     rafay_import_cluster.import_cluster,
@@ -51,12 +51,8 @@ resource "null_resource" "apply_bootstrap_yaml" {
   provisioner "local-exec" {
     interpreter = ["/bin/bash", "-c"]
     command     = <<EOT
-      # Validate and extract raw kubeconfig value
-      if echo "${var.kubeconfig}" | jq -e '.value' > /dev/null; then
-        echo "${var.kubeconfig}" | jq -r '.value' > kubeconfig.yaml
-      else
-        echo "${var.kubeconfig}" > kubeconfig.yaml
-      fi
+      # Extract raw kubeconfig value from JSON
+      echo '${var.kubeconfig}' | jq -r '.value' > kubeconfig.yaml || echo "${var.kubeconfig}" > kubeconfig.yaml
 
       # Apply the bootstrap YAML using kubectl
       ./kubectl --kubeconfig=kubeconfig.yaml apply -f - <<EOF
