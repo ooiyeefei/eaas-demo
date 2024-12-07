@@ -25,6 +25,21 @@ resource "null_resource" "download_kubectl" {
   }
 }
 
+resource "null_resource" "install_jq" {
+  provisioner "local-exec" {
+    command = <<EOT
+      if ! command -v jq &> /dev/null
+      then
+        echo "jq not found. Installing jq..."
+        wget -q "https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64" -O jq
+        chmod +x jq
+        sudo mv jq /usr/local/bin/
+      fi
+    EOT
+    interpreter = ["/bin/bash", "-c"]
+  }
+}
+
 # Apply the bootstrap YAML using kubectl
 resource "null_resource" "apply_bootstrap_yaml" {
   depends_on = [
