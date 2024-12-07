@@ -1,3 +1,21 @@
+locals {
+  # Extract kubeconfig from JSON if present, otherwise use raw kubeconfig
+  extracted_kubeconfig = try(jsondecode(var.kubeconfig_json).value, var.kubeconfig)
+}
+
+# Debugging Outputs
+output "debug_kubeconfig_raw" {
+  value = var.kubeconfig
+}
+
+output "debug_kubeconfig_json" {
+  value = var.kubeconfig_json
+}
+
+output "debug_extracted_kubeconfig" {
+  value = local.extracted_kubeconfig
+}
+
 # Rafay import cluster resource
 resource "rafay_import_cluster" "import_cluster" {
   clustername           = var.cluster_name
@@ -51,26 +69,13 @@ resource "null_resource" "apply_bootstrap_yaml" {
   provisioner "local-exec" {
     interpreter = ["/bin/bash", "-c"]
     command     = <<EOT
-      # Check if kubeconfig is a JSON object or plain string
-      if echo '${var.kubeconfig}' | jq empty 2>/dev/null; then
-        echo '${var.kubeconfig}' | jq -r '.value' > kubeconfig.yaml
-      else
-        echo "${var.kubeconfig}" > kubeconfig.yaml
-      fi
-
-      # Debugging: Print the kubeconfig file content
-      echo "Generated kubeconfig:"
-      cat kubeconfig.yaml
-
+      # Write the kubeconfig to a file
+      echo "${local.extracted_kubeconfig}" > kubeconfig.yaml
+      
       # Apply the bootstrap YAML using kubectl
       ./kubectl --kubeconfig=kubeconfig.yaml apply -f - <<EOF
 ${rafay_import_cluster.import_cluster.bootstrap_data}
 EOF
     EOT
   }
-}
-
-# Debug output
-output "debug_kubeconfig" {
-  value = var.kubeconfig
 }
