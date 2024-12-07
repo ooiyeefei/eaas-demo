@@ -61,5 +61,4 @@ users:
       - --cluster-name
       - ${module.eks.cluster_name}
 EOT
-    sensitive = true
 }
