@@ -1,36 +1,41 @@
+variable "kubeconfig" {
+  type        = string
+  description = "Raw kubeconfig content as a string"
+  default     = ""
+}
+
+variable "kubeconfig_json" {
+  type        = string
+  description = "Optional JSON kubeconfig object containing sensitive, type, and value"
+  default     = "{}"
+}
+
 variable "cluster_name" {
-  type = string
+  type        = string
+  description = "Name of the cluster"
 }
 
 variable "project_name" {
-  description = "Rafay Project Name"
-  type = string
+  type        = string
+  description = "Name of the project"
 }
 
 variable "blueprint" {
-  description = "Rafay blueprint Name"
-  type = string
+  type        = string
+  description = "Blueprint to use"
 }
+
 variable "blueprint_version" {
-  description = "Rafay blueprint Version"
-  type = string
+  type        = string
+  description = "Version of the blueprint"
 }
+
 variable "kubernetes_provider" {
-  description = "Name of the K8s cloud provider, ex: EKS,AKS,GKE,OPENSHIFT,RKE,EKSANYWHERE,OTHER"
-  type = string
+  type        = string
+  description = "Kubernetes provider (e.g., EKS)"
 }
 
 variable "provision_environment" {
-  description = "type of environment, ex: CLOUD, ONPREM"
-  type = string
-}
-
-variable "kubeconfig" {
   type        = string
-
-  validation {
-    condition     = can(jsondecode(var.kubeconfig)) || length(var.kubeconfig) > 0
-    error_message = "The kubeconfig must be either a valid JSON object with a 'value' key or a raw YAML string."
-  }
+  description = "Environment for provisioning"
 }
-
