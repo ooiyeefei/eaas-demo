@@ -18,10 +18,6 @@ resource "rafay_import_cluster" "import_cluster" {
   }
 }
 
-output "bootstrap_yaml" {
-  value = rafay_import_cluster.import_cluster.bootstrap_data
-}
-
 resource "kubectl_manifest" "apply_bootstrap_yaml" {
   yaml_body = rafay_import_cluster.import_cluster.bootstrap_data
 
