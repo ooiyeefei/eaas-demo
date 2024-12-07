@@ -27,8 +27,9 @@ variable "provision_environment" {
 
 variable "kubeconfig" {
   type        = string
+
   validation {
-    condition     = can(jsondecode(kubeconfig)) || length(kubeconfig) > 0
+    condition     = can(jsondecode(var.kubeconfig)) || length(var.kubeconfig) > 0
     error_message = "The kubeconfig must be either a valid JSON object with a 'value' key or a raw YAML string."
   }
 }
