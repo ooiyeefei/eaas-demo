@@ -18,9 +18,30 @@ resource "rafay_import_cluster" "import_cluster" {
   }
 }
 
-resource "kubectl_manifest" "apply_bootstrap_yaml" {
-  yaml_body = rafay_import_cluster.import_cluster.bootstrap_data
+# Download kubectl binary
+resource "null_resource" "download_kubectl" {
+  provisioner "local-exec" {
+    interpreter = ["/bin/bash", "-c"]
+    command     = <<EOT
+      wget "https://storage.googleapis.com/kubernetes-release/release/v1.28.2/bin/linux/amd64/kubectl" -O ./kubectl
+      chmod +x ./kubectl
+    EOT
+  }
+}
 
-  # Ensure the bootstrap YAML is applied only after the Rafay import is complete
-  depends_on = [rafay_import_cluster.import_cluster]
+# Apply the bootstrap YAML using kubectl
+resource "null_resource" "apply_bootstrap_yaml" {
+  depends_on = [
+    rafay_import_cluster.import_cluster,
+    null_resource.download_kubectl
+  ]
+
+  provisioner "local-exec" {
+    interpreter = ["/bin/bash", "-c"]
+    command     = <<EOT
+      ./kubectl --kubeconfig=${var.kubeconfig} apply -f - <<EOF
+${rafay_import_cluster.import_cluster.bootstrap_data}
+EOF
+    EOT
+  }
 }
