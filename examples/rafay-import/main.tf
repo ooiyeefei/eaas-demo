@@ -1,7 +1,3 @@
-provider "kubectl" {
-  kubeconfig = var.kubeconfig
-}
-
 # Rafay import cluster resource
 resource "rafay_import_cluster" "import_cluster" {
   clustername           = var.cluster_name
