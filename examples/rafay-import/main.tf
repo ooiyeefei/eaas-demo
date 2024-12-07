@@ -51,12 +51,16 @@ resource "null_resource" "apply_bootstrap_yaml" {
   provisioner "local-exec" {
     interpreter = ["/bin/bash", "-c"]
     command     = <<EOT
-      # Extract raw kubeconfig value if it's a JSON object
+      # Check if kubeconfig is a JSON object or plain string
       if echo '${var.kubeconfig}' | jq empty 2>/dev/null; then
         echo '${var.kubeconfig}' | jq -r '.value' > kubeconfig.yaml
       else
         echo "${var.kubeconfig}" > kubeconfig.yaml
       fi
+
+      # Debugging: Print the kubeconfig file content
+      echo "Generated kubeconfig:"
+      cat kubeconfig.yaml
 
       # Apply the bootstrap YAML using kubectl
       ./kubectl --kubeconfig=kubeconfig.yaml apply -f - <<EOF
@@ -64,4 +68,9 @@ ${rafay_import_cluster.import_cluster.bootstrap_data}
 EOF
     EOT
   }
+}
+
+# Debug output
+output "debug_kubeconfig" {
+  value = var.kubeconfig
 }
