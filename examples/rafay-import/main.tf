@@ -25,32 +25,19 @@ resource "null_resource" "download_kubectl" {
   }
 }
 
-# Echo kubeconfig to stdout
-resource "null_resource" "echo_kubeconfig" {
-  provisioner "local-exec" {
-    interpreter = ["/bin/bash", "-c"]
-    command     = <<EOT
-      echo "### KUBECONFIG CONTENT ###"
-      echo "${var.kubeconfig}"
-      echo "###########################"
-    EOT
-  }
-}
-
 # Apply the bootstrap YAML using kubectl
 resource "null_resource" "apply_bootstrap_yaml" {
   depends_on = [
     rafay_import_cluster.import_cluster,
-    null_resource.download_kubectl,
-    null_resource.echo_kubeconfig
+    null_resource.download_kubectl
   ]
 
   provisioner "local-exec" {
     interpreter = ["/bin/bash", "-c"]
     command     = <<EOT
-      # Save kubeconfig to a file
-      echo "${var.kubeconfig}" > kubeconfig.yaml
-
+      # Extract raw kubeconfig value from the metadata
+      echo "${var.kubeconfig}" | jq -r '.value' > kubeconfig.yaml
+      
       # Apply the bootstrap YAML using kubectl
       ./kubectl --kubeconfig=kubeconfig.yaml apply -f - <<EOF
 ${rafay_import_cluster.import_cluster.bootstrap_data}
