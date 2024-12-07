@@ -25,3 +25,8 @@ variable "provision_environment" {
   type = string
 }
 
+variable "kubeconfig" {
+  type        = string
+  sensitive   = true
+}
+
