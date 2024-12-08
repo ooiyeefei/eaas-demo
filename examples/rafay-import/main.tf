@@ -1,6 +1,9 @@
 locals {
   # Extract kubeconfig from JSON if present, otherwise use raw kubeconfig
-  extracted_kubeconfig = try(jsondecode(var.kubeconfig_json).value, var.kubeconfig)
+  extracted_kubeconfig = try(
+    jsondecode(var.kubeconfig_json)["value"],
+    var.kubeconfig
+  )
 }
 
 # Debugging Outputs
