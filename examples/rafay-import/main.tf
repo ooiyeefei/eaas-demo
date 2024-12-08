@@ -1,12 +1,10 @@
 locals {
-  # Extract kubeconfig from JSON if present, otherwise use raw kubeconfig
   extracted_kubeconfig = try(
     jsondecode(var.kubeconfig_json)["value"],
     var.kubeconfig
   )
 }
 
-# Debug outputs
 output "debug_kubeconfig_raw" {
   value = var.kubeconfig
 }
@@ -38,7 +36,7 @@ resource "null_resource" "install_dependencies" {
   provisioner "local-exec" {
     interpreter = ["/bin/bash", "-c"]
     command     = <<EOT
-      # Check for essential tools: wget, unzip
+      # Check that wget and unzip exist. If not, fail.
       if ! command -v wget &> /dev/null; then
         echo "wget not found. Please install wget manually and rerun."
         exit 1
@@ -49,44 +47,46 @@ resource "null_resource" "install_dependencies" {
         exit 1
       fi
 
-      # Check and install AWS CLI if not present
-      if ! command -v aws &> /dev/null; then
-        echo "Installing AWS CLI..."
-        wget -q "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -O "awscliv2.zip"
-        unzip awscliv2.zip
-        ./aws/install || { echo "Failed to install AWS CLI."; exit 1; }
+      # Install AWS CLI locally if not present
+      if ! command -v ./aws &> /dev/null && ! command -v aws &> /dev/null; then
+        echo "Installing AWS CLI locally..."
+        wget -q "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -O awscliv2.zip
+        unzip -q awscliv2.zip
+        # Install AWS CLI into the current directory
+        ./aws/install --install-dir . --bin-dir . || { echo "Failed to install AWS CLI locally."; exit 1; }
         rm -rf aws awscliv2.zip
       else
-        echo "aws is already installed."
+        echo "AWS CLI is already installed or available."
       fi
 
-      # Check and install kubectl if not present
-      if ! command -v kubectl &> /dev/null; then
-        echo "Installing kubectl..."
+      # Install kubectl locally if not present
+      if [ ! -f "./kubectl" ]; then
+        echo "Installing kubectl locally..."
         wget -q "https://storage.googleapis.com/kubernetes-release/release/v1.28.2/bin/linux/amd64/kubectl" -O kubectl
-        chmod +x kubectl
-        mv kubectl /usr/local/bin/ || { echo "Failed to move kubectl to /usr/local/bin"; exit 1; }
+        chmod +x kubectl || { echo "Failed to chmod kubectl"; exit 1; }
       else
-        echo "kubectl is already installed."
+        echo "kubectl is already present locally."
       fi
 
-      # Check and install jq if not present
-      if ! command -v jq &> /dev/null; then
-        echo "Installing jq..."
+      # Install jq locally if not present
+      if [ ! -f "./jq" ]; then
+        echo "Installing jq locally..."
         wget -q "https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64" -O jq
-        chmod +x jq
-        mv jq /usr/local/bin/ || { echo "Failed to move jq to /usr/local/bin"; exit 1; }
+        chmod +x jq || { echo "Failed to chmod jq"; exit 1; }
       else
-        echo "jq is already installed."
+        echo "jq is already present locally."
       fi
+
+      # Set PATH to current directory so we can run ./aws, ./kubectl, ./jq directly
+      export PATH=$PATH:$(pwd)
 
       # Verify installations
       echo "Verifying installations..."
-      aws --version || { echo "AWS CLI verification failed"; exit 1; }
-      kubectl version --client || { echo "kubectl verification failed"; exit 1; }
-      jq --version || { echo "jq verification failed"; exit 1; }
+      if ! ./aws --version &> /dev/null; then echo "AWS CLI verification failed"; exit 1; fi
+      if ! ./kubectl version --client &> /dev/null; then echo "kubectl verification failed"; exit 1; fi
+      if ! ./jq --version &> /dev/null; then echo "jq verification failed"; exit 1; fi
 
-      echo "All tools installed and verified."
+      echo "All tools installed and verified locally."
     EOT
   }
 }
@@ -106,8 +106,8 @@ resource "null_resource" "apply_bootstrap_yaml" {
   provisioner "local-exec" {
     interpreter = ["/bin/bash", "-c"]
     command     = <<EOT
-      echo "Applying bootstrap YAML using kubectl..."
-      kubectl --kubeconfig=kubeconfig.yaml apply -f - <<EOF
+      echo "Applying bootstrap YAML using local kubectl..."
+      PATH=$PATH:$(pwd) ./kubectl --kubeconfig=kubeconfig.yaml apply -f - <<EOF
 ${rafay_import_cluster.import_cluster.bootstrap_data}
 EOF
     EOT
