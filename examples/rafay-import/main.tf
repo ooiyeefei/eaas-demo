@@ -6,7 +6,7 @@ locals {
   )
 }
 
-# Debugging Outputs
+# Debug outputs
 output "debug_kubeconfig_raw" {
   value = var.kubeconfig
 }
@@ -19,7 +19,6 @@ output "debug_extracted_kubeconfig" {
   value = local.extracted_kubeconfig
 }
 
-# Rafay import cluster resource
 resource "rafay_import_cluster" "import_cluster" {
   clustername           = var.cluster_name
   projectname           = var.project_name
@@ -35,59 +34,68 @@ resource "rafay_import_cluster" "import_cluster" {
   }
 }
 
-# Install dependencies (AWS CLI, kubectl, jq, curl)
 resource "null_resource" "install_dependencies" {
   provisioner "local-exec" {
     interpreter = ["/bin/bash", "-c"]
     command     = <<EOT
-      # Function to check and install tools
-      install_tool() {
-        local tool=$1
-        local install_cmd=$2
+      # Check for essential tools: wget, unzip
+      if ! command -v wget &> /dev/null; then
+        echo "wget not found. Please install wget manually and rerun."
+        exit 1
+      fi
 
-        if ! command -v "$tool" &> /dev/null; then
-          echo "Installing $tool..."
-          eval "$install_cmd"
-          if ! command -v "$tool" &> /dev/null; then
-            echo "Failed to install $tool. Ensure the environment supports the installation command."
-            exit 1
-          fi
-        else
-          echo "$tool is already installed."
-        fi
-      }
+      if ! command -v unzip &> /dev/null; then
+        echo "unzip not found. Please install unzip manually and rerun."
+        exit 1
+      fi
 
-      # Install curl if not installed
-      install_tool "curl" "apt-get update && apt-get install -y curl"
+      # Check and install AWS CLI if not present
+      if ! command -v aws &> /dev/null; then
+        echo "Installing AWS CLI..."
+        wget -q "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -O "awscliv2.zip"
+        unzip awscliv2.zip
+        ./aws/install || { echo "Failed to install AWS CLI."; exit 1; }
+        rm -rf aws awscliv2.zip
+      else
+        echo "aws is already installed."
+      fi
 
-      # Install unzip if not installed
-      install_tool "unzip" "apt-get install -y unzip"
+      # Check and install kubectl if not present
+      if ! command -v kubectl &> /dev/null; then
+        echo "Installing kubectl..."
+        wget -q "https://storage.googleapis.com/kubernetes-release/release/v1.28.2/bin/linux/amd64/kubectl" -O kubectl
+        chmod +x kubectl
+        mv kubectl /usr/local/bin/ || { echo "Failed to move kubectl to /usr/local/bin"; exit 1; }
+      else
+        echo "kubectl is already installed."
+      fi
 
-      # Install AWS CLI if not installed
-      install_tool "aws" "curl -s 'https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip' -o 'awscliv2.zip' && unzip awscliv2.zip && ./aws/install && rm -rf aws awscliv2.zip"
-
-      # Install kubectl if not installed
-      install_tool "kubectl" "curl -LO 'https://storage.googleapis.com/kubernetes-release/release/v1.28.2/bin/linux/amd64/kubectl' && chmod +x kubectl && mv kubectl /usr/local/bin/"
-
-      # Install jq if not installed
-      install_tool "jq" "curl -LO 'https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64' && chmod +x jq && mv jq /usr/local/bin/"
+      # Check and install jq if not present
+      if ! command -v jq &> /dev/null; then
+        echo "Installing jq..."
+        wget -q "https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64" -O jq
+        chmod +x jq
+        mv jq /usr/local/bin/ || { echo "Failed to move jq to /usr/local/bin"; exit 1; }
+      else
+        echo "jq is already installed."
+      fi
 
       # Verify installations
       echo "Verifying installations..."
-      aws --version || { echo "AWS CLI installation failed"; exit 1; }
-      kubectl version --client || { echo "kubectl installation failed"; exit 1; }
-      jq --version || { echo "jq installation failed"; exit 1; }
+      aws --version || { echo "AWS CLI verification failed"; exit 1; }
+      kubectl version --client || { echo "kubectl verification failed"; exit 1; }
+      jq --version || { echo "jq verification failed"; exit 1; }
+
+      echo "All tools installed and verified."
     EOT
   }
 }
 
-# Write the kubeconfig to a file
 resource "local_sensitive_file" "kubeconfig" {
   content  = local.extracted_kubeconfig
   filename = "kubeconfig.yaml"
 }
 
-# Apply the bootstrap YAML
 resource "null_resource" "apply_bootstrap_yaml" {
   depends_on = [
     rafay_import_cluster.import_cluster,
