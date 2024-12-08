@@ -5,9 +5,9 @@ variable "kubeconfig" {
 }
 
 variable "kubeconfig_json" {
-  type        = string
+  type        = any
   description = "Optional JSON kubeconfig object containing sensitive, type, and value"
-  default     = "{}"
+  default     = {}
 }
 
 variable "cluster_name" {
