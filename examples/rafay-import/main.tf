@@ -35,7 +35,7 @@ resource "rafay_import_cluster" "import_cluster" {
   }
 }
 
-# Install dependencies (AWS CLI, kubectl, jq)
+# Install dependencies (AWS CLI, kubectl, jq, curl)
 resource "null_resource" "install_dependencies" {
   provisioner "local-exec" {
     interpreter = ["/bin/bash", "-c"]
@@ -58,7 +58,10 @@ resource "null_resource" "install_dependencies" {
       }
 
       # Install curl if not installed
-      install_tool "curl" "echo 'curl is required but not installed. Please install it manually.' && exit 1"
+      install_tool "curl" "apt-get update && apt-get install -y curl"
+
+      # Install unzip if not installed
+      install_tool "unzip" "apt-get install -y unzip"
 
       # Install AWS CLI if not installed
       install_tool "aws" "curl -s 'https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip' -o 'awscliv2.zip' && unzip awscliv2.zip && ./aws/install && rm -rf aws awscliv2.zip"
@@ -78,20 +81,24 @@ resource "null_resource" "install_dependencies" {
   }
 }
 
-# Extract and apply the kubeconfig
+# Write the kubeconfig to a file
+resource "local_sensitive_file" "kubeconfig" {
+  content  = local.extracted_kubeconfig
+  filename = "kubeconfig.yaml"
+}
+
+# Apply the bootstrap YAML
 resource "null_resource" "apply_bootstrap_yaml" {
   depends_on = [
     rafay_import_cluster.import_cluster,
+    local_sensitive_file.kubeconfig,
     null_resource.install_dependencies
   ]
 
   provisioner "local-exec" {
     interpreter = ["/bin/bash", "-c"]
     command     = <<EOT
-      # Write the kubeconfig to a file
-      echo "${local.extracted_kubeconfig}" > kubeconfig.yaml
-      
-      # Apply the bootstrap YAML using kubectl
+      echo "Applying bootstrap YAML using kubectl..."
       kubectl --kubeconfig=kubeconfig.yaml apply -f - <<EOF
 ${rafay_import_cluster.import_cluster.bootstrap_data}
 EOF
