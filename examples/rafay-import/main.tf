@@ -40,46 +40,40 @@ resource "null_resource" "install_dependencies" {
   provisioner "local-exec" {
     interpreter = ["/bin/bash", "-c"]
     command     = <<EOT
-      # Install curl if not installed
-      if ! command -v curl &> /dev/null; then
-        echo "Installing curl..."
-        apt-get update && apt-get install -y curl
-      fi
+      # Function to check and install tools
+      install_tool() {
+        local tool=$1
+        local install_cmd=$2
 
-      # Install unzip if not installed
-      if ! command -v unzip &> /dev/null; then
-        echo "Installing unzip..."
-        apt-get update && apt-get install -y unzip
-      fi
+        if ! command -v "$tool" &> /dev/null; then
+          echo "Installing $tool..."
+          eval "$install_cmd"
+          if ! command -v "$tool" &> /dev/null; then
+            echo "Failed to install $tool. Ensure the environment supports the installation command."
+            exit 1
+          fi
+        else
+          echo "$tool is already installed."
+        fi
+      }
+
+      # Install curl if not installed
+      install_tool "curl" "echo 'curl is required but not installed. Please install it manually.' && exit 1"
 
       # Install AWS CLI if not installed
-      if ! command -v aws &> /dev/null; then
-        echo "Installing AWS CLI..."
-        curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-        unzip awscliv2.zip
-        ./aws/install
-      fi
+      install_tool "aws" "curl -s 'https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip' -o 'awscliv2.zip' && unzip awscliv2.zip && ./aws/install && rm -rf aws awscliv2.zip"
 
-      # Install kubectl if not present
-      if ! command -v kubectl &> /dev/null; then
-        echo "Installing kubectl..."
-        curl -LO "https://storage.googleapis.com/kubernetes-release/release/v1.28.2/bin/linux/amd64/kubectl"
-        chmod +x ./kubectl
-        mv ./kubectl /usr/local/bin/
-      fi
+      # Install kubectl if not installed
+      install_tool "kubectl" "curl -LO 'https://storage.googleapis.com/kubernetes-release/release/v1.28.2/bin/linux/amd64/kubectl' && chmod +x kubectl && mv kubectl /usr/local/bin/"
 
-      # Install jq if not present
-      if ! command -v jq &> /dev/null; then
-        echo "Installing jq..."
-        curl -LO "https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64"
-        chmod +x jq
-        mv jq /usr/local/bin/
-      fi
+      # Install jq if not installed
+      install_tool "jq" "curl -LO 'https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64' && chmod +x jq && mv jq /usr/local/bin/"
 
       # Verify installations
-      aws --version
-      kubectl version --client
-      jq --version
+      echo "Verifying installations..."
+      aws --version || { echo "AWS CLI installation failed"; exit 1; }
+      kubectl version --client || { echo "kubectl installation failed"; exit 1; }
+      jq --version || { echo "jq installation failed"; exit 1; }
     EOT
   }
 }
