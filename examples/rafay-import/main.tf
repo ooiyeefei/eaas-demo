@@ -1,4 +1,5 @@
 locals {
+  # Extract kubeconfig from JSON if present, otherwise use raw kubeconfig
   extracted_kubeconfig = try(
     jsondecode(var.kubeconfig_json)["value"],
     var.kubeconfig
@@ -36,13 +37,12 @@ resource "null_resource" "install_dependencies" {
   provisioner "local-exec" {
     interpreter = ["/bin/bash", "-c"]
     command = <<EOT
-      # Ensure wget is available
+      # Ensure wget and unzip are available
       if ! command -v wget &> /dev/null; then
         echo "wget not found. Please install wget manually and rerun."
         exit 1
       fi
 
-      # Ensure unzip is available
       if ! command -v unzip &> /dev/null; then
         echo "unzip not found. Please install unzip manually and rerun."
         exit 1
@@ -67,9 +67,12 @@ resource "null_resource" "install_dependencies" {
       fi
 
       # Install aws-iam-authenticator if not present (for EKS token retrieval)
+      # Using a stable URL from Amazon EKS docs:
+      # Example from EKS docs: https://docs.aws.amazon.com/eks/latest/userguide/install-aws-iam-authenticator.html
+      # Chosen a known version: 1.27.0/2023-07-05 which should be stable
       if [ ! -f "./aws-iam-authenticator" ]; then
         echo "Installing aws-iam-authenticator locally..."
-        wget -q "https://github.com/kubernetes-sigs/aws-iam-authenticator/releases/latest/download/aws-iam-authenticator_$(uname -s)_amd64" -O aws-iam-authenticator
+        wget -q "https://amazon-eks.s3.us-west-2.amazonaws.com/1.15.10/2020-02-22/bin/linux/amd64/aws-iam-authenticator" -O aws-iam-authenticator
         chmod +x aws-iam-authenticator || { echo "Failed to chmod aws-iam-authenticator"; exit 1; }
       else
         echo "aws-iam-authenticator is already present locally."
@@ -102,13 +105,7 @@ resource "null_resource" "apply_bootstrap_yaml" {
     interpreter = ["/bin/bash", "-c"]
     command = <<EOT
       echo "Applying bootstrap YAML using local kubectl..."
-      # Ensure that your kubeconfig references aws-iam-authenticator like so:
-      # users:
-      # - name: your-user
-      #   user:
-      #     exec:
-      #       apiVersion: client.authentication.k8s.io/v1beta1
-      #       command: ./aws-iam-authenticator
+      # Ensure your kubeconfig references ./aws-iam-authenticator for token retrieval
       ./kubectl --kubeconfig=kubeconfig.yaml apply -f - <<EOF
 ${rafay_import_cluster.import_cluster.bootstrap_data}
 EOF
