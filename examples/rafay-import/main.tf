@@ -22,37 +22,41 @@ resource "null_resource" "setup_and_apply" {
 
   provisioner "local-exec" {
     interpreter = ["/bin/bash", "-c"]
+    environment = {
+      AWS_ACCESS_KEY_ID     = var.aws_access_key_id
+      AWS_SECRET_ACCESS_KEY = var.aws_secret_access_key
+    }
     command = <<EOT
       # Ensure wget and unzip are available
       if ! command -v wget &> /dev/null; then
         echo "wget not found. Installing wget..."
-        sudo apt-get update -y && sudo apt-get install wget -y || { echo "Failed to install wget"; exit 1; }
+        apt-get update -y && apt-get install wget -y || { echo "Failed to install wget"; exit 1; }
       else
         echo "wget is already available."
       fi
 
       if ! command -v unzip &> /dev/null; then
         echo "unzip not found. Installing unzip..."
-        sudo apt-get update -y && sudo apt-get install unzip -y || { echo "Failed to install unzip"; exit 1; }
+        apt-get update -y && apt-get install unzip -y || { echo "Failed to install unzip"; exit 1; }
       else
         echo "unzip is already available."
       fi
-      
+
       # Install AWS CLI locally if not present
       if ! command -v aws &> /dev/null; then
         echo "AWS CLI not found. Installing AWS CLI..."
         wget -q "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -O "awscliv2.zip"
         unzip -q awscliv2.zip || { echo "Failed to unzip AWS CLI package"; exit 1; }
-        sudo ./aws/install || { echo "Failed to install AWS CLI"; exit 1; }
+        ./aws/install || { echo "Failed to install AWS CLI"; exit 1; }
         rm -rf awscliv2.zip aws
       else
         echo "AWS CLI is already available."
       fi
-      
+
       # Install kubectl locally if not present
       if [ ! -f "./kubectl" ]; then
         echo "Installing kubectl locally..."
-        wget   "wget "https://storage.googleapis.com/kubernetes-release/release/v1.28.2/bin/linux/amd64/kubectl"
+        wget -q "https://storage.googleapis.com/kubernetes-release/release/v1.28.2/bin/linux/amd64/kubectl" -O kubectl
         chmod +x kubectl || { echo "Failed to chmod kubectl"; exit 1; }
       else
         echo "kubectl is already present locally."
