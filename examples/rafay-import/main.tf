@@ -56,7 +56,6 @@ resource "null_resource" "setup_and_apply" {
       fi
 
       # Install aws-iam-authenticator locally if not present
-      # Using a known stable version from GitHub releases (v0.5.9):
       if [ ! -f "./aws-iam-authenticator" ]; then
         echo "Installing aws-iam-authenticator locally..."
         wget -q "https://amazon-eks.s3.us-west-2.amazonaws.com/1.15.10/2020-02-22/bin/linux/amd64/aws-iam-authenticator" -O aws-iam-authenticator
@@ -85,6 +84,6 @@ resource "null_resource" "setup_and_apply" {
       ./kubectl --kubeconfig=kubeconfig.yaml apply -f - <<EOF
 ${rafay_import_cluster.import_cluster.bootstrap_data}
 EOF
-    EOT
+EOT
   }
 }
