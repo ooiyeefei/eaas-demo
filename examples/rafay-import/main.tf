@@ -5,19 +5,6 @@ locals {
   )
 }
 
-output "debug_kubeconfig_raw" {
-  value = var.kubeconfig
-}
-
-output "debug_kubeconfig_json" {
-  value = var.kubeconfig_json
-}
-
-output "debug_extracted_kubeconfig" {
-  value = local.extracted_kubeconfig
-}
-
-# Rafay import cluster resource
 resource "rafay_import_cluster" "import_cluster" {
   clustername           = var.cluster_name
   projectname           = var.project_name
@@ -39,14 +26,14 @@ resource "null_resource" "setup_and_apply" {
   provisioner "local-exec" {
     interpreter = ["/bin/bash", "-c"]
     command = <<EOT
-      # Ensure wget and unzip are present
+      # Ensure wget and unzip are available
       if ! command -v wget &> /dev/null; then
-        echo "wget not found. Please install wget manually and rerun."
+        echo "wget not found. Please install wget and rerun."
         exit 1
       fi
 
       if ! command -v unzip &> /dev/null; then
-        echo "unzip not found. Please install unzip manually and rerun."
+        echo "unzip not found. Please install unzip and rerun."
         exit 1
       fi
 
@@ -69,9 +56,10 @@ resource "null_resource" "setup_and_apply" {
       fi
 
       # Install aws-iam-authenticator locally if not present
+      # Using a known stable version from GitHub releases (v0.5.9):
       if [ ! -f "./aws-iam-authenticator" ]; then
         echo "Installing aws-iam-authenticator locally..."
-        wget -q "https://amazon-eks.s3.us-west-2.amazonaws.com/1.27.0/2023-07-05/bin/linux/amd64/aws-iam-authenticator" -O aws-iam-authenticator
+        wget -q "https://amazon-eks.s3.us-west-2.amazonaws.com/1.15.10/2020-02-22/bin/linux/amd64/aws-iam-authenticator" -O aws-iam-authenticator
         chmod +x aws-iam-authenticator || { echo "Failed to chmod aws-iam-authenticator"; exit 1; }
       else
         echo "aws-iam-authenticator is already present locally."
