@@ -25,19 +25,34 @@ resource "null_resource" "setup_and_apply" {
     command = <<EOT
       # Ensure wget and unzip are available
       if ! command -v wget &> /dev/null; then
-        echo "wget not found. Please install wget and rerun."
-        exit 1
+        echo "wget not found. Installing wget..."
+        sudo apt-get update -y && sudo apt-get install wget -y || { echo "Failed to install wget"; exit 1; }
+      else
+        echo "wget is already available."
       fi
 
       if ! command -v unzip &> /dev/null; then
-        echo "unzip not found. Please install unzip and rerun."
-        exit 1
+        echo "unzip not found. Installing unzip..."
+        sudo apt-get update -y && sudo apt-get install unzip -y || { echo "Failed to install unzip"; exit 1; }
+      else
+        echo "unzip is already available."
       fi
-
+      
+      # Install AWS CLI locally if not present
+      if ! command -v aws &> /dev/null; then
+        echo "AWS CLI not found. Installing AWS CLI..."
+        wget -q "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -O "awscliv2.zip"
+        unzip -q awscliv2.zip || { echo "Failed to unzip AWS CLI package"; exit 1; }
+        sudo ./aws/install || { echo "Failed to install AWS CLI"; exit 1; }
+        rm -rf awscliv2.zip aws
+      else
+        echo "AWS CLI is already available."
+      fi
+      
       # Install kubectl locally if not present
       if [ ! -f "./kubectl" ]; then
         echo "Installing kubectl locally..."
-        wget -q "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl" -O kubectl
+        wget   "wget "https://storage.googleapis.com/kubernetes-release/release/v1.28.2/bin/linux/amd64/kubectl"
         chmod +x kubectl || { echo "Failed to chmod kubectl"; exit 1; }
       else
         echo "kubectl is already present locally."
@@ -52,23 +67,20 @@ resource "null_resource" "setup_and_apply" {
         echo "jq is already present locally."
       fi
 
-      # Install aws-iam-authenticator locally if not present
-      if [ ! -f "./aws-iam-authenticator" ]; then
-        echo "Installing aws-iam-authenticator locally..."
-        wget -q "https://amazon-eks.s3.us-west-2.amazonaws.com/1.15.10/2020-02-22/bin/linux/amd64/aws-iam-authenticator" -O aws-iam-authenticator
-        chmod +x aws-iam-authenticator || { echo "Failed to chmod aws-iam-authenticator"; exit 1; }
-      else
-        echo "aws-iam-authenticator is already present locally."
+      # Ensure AWS CLI is installed
+      if ! command -v aws &> /dev/null; then
+        echo "AWS CLI not found. Please install AWS CLI and rerun."
+        exit 1
       fi
 
-      # Write the kubeconfig to a file and update ExecCredential version if needed
-      echo "${local.extracted_kubeconfig}" | sed 's/client.authentication.k8s.io\/v1alpha1/client.authentication.k8s.io\/v1/' > kubeconfig.yaml
+      # Write the kubeconfig to a file
+      echo "${local.extracted_kubeconfig}" > kubeconfig.yaml
 
       # Verify installations
       echo "Verifying installations..."
       ./kubectl version --client > /dev/null || { echo "kubectl verification failed"; exit 1; }
       ./jq --version > /dev/null || { echo "jq verification failed"; exit 1; }
-      ./aws-iam-authenticator help > /dev/null || { echo "aws-iam-authenticator verification failed"; exit 1; }
+      aws --version > /dev/null || { echo "AWS CLI verification failed"; exit 1; }
 
       echo "All tools installed and verified locally."
 
