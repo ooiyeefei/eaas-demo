@@ -54,15 +54,15 @@ users:
   user:
     exec:
       apiVersion: client.authentication.k8s.io/v1beta1
+      command: aws
       args:
       - --region
-      - "${module.eks.region}"
+      - ${var.region}
       - eks
       - get-token
       - --cluster-name
-      - "${module.eks.cluster_name}"
+      - ${var.cluster_name}
       - --output
       - json
-      command: aws
 EOT
 }
