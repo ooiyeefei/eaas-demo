@@ -30,6 +30,23 @@ provider "helm" {
   }
 }
 
+resource "null_resource" "install_aws_cli" {
+  provisioner "local-exec" {
+    command = <<EOT
+      if ! command -v aws &> /dev/null; then
+        echo "AWS CLI not found. Installing..."
+        curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+        unzip -q awscliv2.zip
+        sudo ./aws/install || { echo "Failed to install AWS CLI"; exit 1; }
+        rm -rf awscliv2.zip aws
+      else
+        echo "AWS CLI is already installed."
+      fi
+    EOT
+  }
+}
+
+
 resource "helm_release" "v2-infra" {
   depends_on = [rafay_import_cluster.import_cluster]
 
