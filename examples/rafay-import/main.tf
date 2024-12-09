@@ -1,5 +1,10 @@
 locals {
-  extracted_kubeconfig = var.kubeconfig
+  kubeconfig_path = "${path.module}/kubeconfig.yaml"
+}
+
+resource "local_file" "kubeconfig" {
+  content  = var.kubeconfig
+  filename = local.kubeconfig_path
 }
 
 resource "rafay_import_cluster" "import_cluster" {
@@ -9,6 +14,7 @@ resource "rafay_import_cluster" "import_cluster" {
   blueprint_version     = var.blueprint_version
   kubernetes_provider   = var.kubernetes_provider
   provision_environment = var.provision_environment
+  values_path           = "values.yaml"
 
   lifecycle {
     ignore_changes = [
@@ -18,78 +24,29 @@ resource "rafay_import_cluster" "import_cluster" {
   }
 }
 
-resource "null_resource" "setup_and_apply" {
+provider "helm" {
+  kubernetes {
+    config_path = local.kubeconfig_path
+  }
+}
+
+resource "helm_release" "v2-infra" {
   depends_on = [rafay_import_cluster.import_cluster]
 
-  provisioner "local-exec" {
-    interpreter = ["/bin/bash", "-c"]
-    command = <<EOT
-      # Function to install a package if not present
-      install_if_not_present() {
-        if ! command -v \$1 &> /dev/null; then
-          echo "\$1 not found. Installing \$1..."
-          if command -v apt-get &> /dev/null; then
-            apt-get update -y && apt-get install -y \$1 || { echo "Failed to install \$1"; exit 1; }
-          elif command -v yum &> /dev/null; then
-            yum install -y \$1 || { echo "Failed to install \$1"; exit 1; }
-          else
-            echo "No suitable package manager found. Please install \$1 manually."
-            exit 1
-          fi
-        else
-          echo "\$1 is already installed."
-        fi
-      }
+  name             = "v2-infra"
+  namespace        = "rafay-system"
+  create_namespace = true
+  repository       = "https://rafaysystems.github.io/rafay-helm-charts/"
+  chart            = "v2-infra"
+  values           = [rafay_import_cluster.import_cluster.values_data]
+  version          = "1.1.2"
 
-      # Ensure wget and unzip are available
-      install_if_not_present wget
-      install_if_not_present unzip
-
-      # Install AWS CLI locally if not present
-      if ! command -v aws &> /dev/null; then
-        echo "AWS CLI not found. Installing AWS CLI..."
-        wget -q "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -O "awscliv2.zip"
-        unzip -q awscliv2.zip || { echo "Failed to unzip AWS CLI package"; exit 1; }
-        ./aws/install || { echo "Failed to install AWS CLI"; exit 1; }
-        rm -rf awscliv2.zip aws
-      else
-        echo "AWS CLI is already available."
-      fi
-
-      # Install kubectl locally if not present
-      if [ ! -f "./kubectl" ]; then
-        echo "Installing kubectl locally..."
-        wget -q "https://storage.googleapis.com/kubernetes-release/release/v1.28.2/bin/linux/amd64/kubectl" -O kubectl
-        chmod +x kubectl || { echo "Failed to chmod kubectl"; exit 1; }
-      else
-        echo "kubectl is already present locally."
-      fi
-
-      # Install jq locally if not present
-      if [ ! -f "./jq" ]; then
-        echo "Installing jq locally..."
-        wget -q "https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64" -O jq
-        chmod +x jq || { echo "Failed to chmod jq"; exit 1; }
-      else
-        echo "jq is already present locally."
-      fi
-
-      # Write the kubeconfig to a file
-      echo "${local.extracted_kubeconfig}" > kubeconfig.yaml
-
-      # Verify installations
-      echo "Verifying installations..."
-      ./kubectl version --client > /dev/null || { echo "kubectl verification failed"; exit 1; }
-      ./jq --version > /dev/null || { echo "jq verification failed"; exit 1; }
-      aws --version > /dev/null || { echo "AWS CLI verification failed"; exit 1; }
-
-      echo "All tools installed and verified locally."
-
-      # Apply the bootstrap YAML using local kubectl
-      echo "Applying bootstrap YAML using local kubectl..."
-      ./kubectl --kubeconfig=kubeconfig.yaml apply -f - <<EOF
-${rafay_import_cluster.import_cluster.bootstrap_data}
-EOF
-    EOT
+  lifecycle {
+    ignore_changes = [
+      # Avoid reapplying helm release
+      values,
+      # Prevent reapplying if version changes
+      version
+    ]
   }
 }
