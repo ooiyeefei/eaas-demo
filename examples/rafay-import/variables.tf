@@ -1,15 +1,3 @@
-variable "kubeconfig" {
-  type        = string
-  description = "Raw kubeconfig content as a string"
-  default     = ""
-}
-
-variable "kubeconfig_json" {
-  type        = any
-  description = "Optional JSON kubeconfig object containing sensitive, type, and value"
-  default     = {}
-}
-
 variable "region" {
   type        = string
   default = "us-west-2"
