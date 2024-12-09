@@ -1,12 +1,3 @@
-locals {
-  kubeconfig_path = "${path.module}/kubeconfig.yaml"
-}
-
-resource "local_file" "kubeconfig" {
-  content  = var.kubeconfig
-  filename = local.kubeconfig_path
-}
-
 provider "aws" {
     region = var.region
 }
