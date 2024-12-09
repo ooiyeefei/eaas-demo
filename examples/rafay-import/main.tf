@@ -37,7 +37,7 @@ resource "null_resource" "setup_and_apply" {
       # Install kubectl locally if not present
       if [ ! -f "./kubectl" ]; then
         echo "Installing kubectl locally..."
-        wget -q "https://dl.k8s.io/release/v1.28.2/bin/linux/amd64/kubectl" -O kubectl
+        wget -q "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl" -O kubectl
         chmod +x kubectl || { echo "Failed to chmod kubectl"; exit 1; }
       else
         echo "kubectl is already present locally."
@@ -55,14 +55,14 @@ resource "null_resource" "setup_and_apply" {
       # Install aws-iam-authenticator locally if not present
       if [ ! -f "./aws-iam-authenticator" ]; then
         echo "Installing aws-iam-authenticator locally..."
-        wget -q "https://amazon-eks.s3.us-west-2.amazonaws.com/1.15.10/2020-02-22/bin/linux/amd64/aws-iam-authenticator" -O aws-iam-authenticator
+        wget -q "https://github.com/kubernetes-sigs/aws-iam-authenticator/releases/latest/download/aws-iam-authenticator_$(uname -s)_amd64" -O aws-iam-authenticator
         chmod +x aws-iam-authenticator || { echo "Failed to chmod aws-iam-authenticator"; exit 1; }
       else
         echo "aws-iam-authenticator is already present locally."
       fi
 
-      # Write the kubeconfig to a file
-      echo "${local.extracted_kubeconfig}" > kubeconfig.yaml
+      # Write the kubeconfig to a file and update ExecCredential version if needed
+      echo "${local.extracted_kubeconfig}" | sed 's/client.authentication.k8s.io\/v1alpha1/client.authentication.k8s.io\/v1/' > kubeconfig.yaml
 
       # Verify installations
       echo "Verifying installations..."
