@@ -9,6 +9,7 @@ resource "rafay_import_cluster" "import_cluster" {
   blueprint_version     = var.blueprint_version
   kubernetes_provider   = var.kubernetes_provider
   provision_environment = var.provision_environment
+
   lifecycle {
     ignore_changes = [
       bootstrap_path,
@@ -23,20 +24,19 @@ resource "null_resource" "setup_and_apply" {
   provisioner "local-exec" {
     interpreter = ["/bin/bash", "-c"]
     command = <<EOT
-      # Ensure wget and unzip are available
-      if ! command -v wget &> /dev/null; then
-        echo "wget not found. Installing wget..."
-        apt-get update -y && apt-get install wget -y || { echo "Failed to install wget"; exit 1; }
-      else
-        echo "wget is already available."
-      fi
+      # Function to install a package if not present
+      install_if_not_present() {
+        if ! command -v \$1 &> /dev/null; then
+          echo "\$1 not found. Installing \$1..."
+          apt-get update -y && apt-get install -y \$1 || { echo "Failed to install \$1"; exit 1; }
+        else
+          echo "\$1 is already installed."
+        fi
+      }
 
-      if ! command -v unzip &> /dev/null; then
-        echo "unzip not found. Installing unzip..."
-        apt-get update -y && apt-get install unzip -y || { echo "Failed to install unzip"; exit 1; }
-      else
-        echo "unzip is already available."
-      fi
+      # Ensure wget and unzip are available
+      install_if_not_present wget
+      install_if_not_present unzip
 
       # Install AWS CLI locally if not present
       if ! command -v aws &> /dev/null; then
@@ -65,12 +65,6 @@ resource "null_resource" "setup_and_apply" {
         chmod +x jq || { echo "Failed to chmod jq"; exit 1; }
       else
         echo "jq is already present locally."
-      fi
-
-      # Ensure AWS CLI is installed
-      if ! command -v aws &> /dev/null; then
-        echo "AWS CLI not found. Please install AWS CLI and rerun."
-        exit 1
       fi
 
       # Write the kubeconfig to a file
