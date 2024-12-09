@@ -28,7 +28,14 @@ resource "null_resource" "setup_and_apply" {
       install_if_not_present() {
         if ! command -v \$1 &> /dev/null; then
           echo "\$1 not found. Installing \$1..."
-          apt-get update -y && apt-get install -y \$1 || { echo "Failed to install \$1"; exit 1; }
+          if command -v apt-get &> /dev/null; then
+            apt-get update -y && apt-get install -y \$1 || { echo "Failed to install \$1"; exit 1; }
+          elif command -v yum &> /dev/null; then
+            yum install -y \$1 || { echo "Failed to install \$1"; exit 1; }
+          else
+            echo "No suitable package manager found. Please install \$1 manually."
+            exit 1
+          fi
         else
           echo "\$1 is already installed."
         fi
