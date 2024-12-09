@@ -1,5 +1,4 @@
 locals {
-  # Extract kubeconfig from JSON if present, otherwise use raw kubeconfig
   extracted_kubeconfig = try(
     jsondecode(var.kubeconfig_json)["value"],
     var.kubeconfig
@@ -36,29 +35,20 @@ resource "rafay_import_cluster" "import_cluster" {
 resource "null_resource" "install_dependencies" {
   provisioner "local-exec" {
     interpreter = ["/bin/bash", "-c"]
-    command     = <<EOT
-      # Check if wget and unzip exist, else fail
+    command = <<EOT
+      # Ensure wget is available
       if ! command -v wget &> /dev/null; then
         echo "wget not found. Please install wget manually and rerun."
         exit 1
       fi
 
+      # Ensure unzip is available
       if ! command -v unzip &> /dev/null; then
         echo "unzip not found. Please install unzip manually and rerun."
         exit 1
       fi
 
-      # Install AWS CLI locally if not present
-      if [ ! -f "./aws/dist/aws" ]; then
-        echo "Installing AWS CLI locally..."
-        wget -q "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -O awscliv2.zip
-        unzip -q awscliv2.zip
-        chmod +x aws/dist/aws || { echo "Failed to chmod AWS CLI binary"; exit 1; }
-      else
-        echo "AWS CLI is already present locally."
-      fi
-
-      # Install kubectl locally if not present
+      # Install kubectl if not present
       if [ ! -f "./kubectl" ]; then
         echo "Installing kubectl locally..."
         wget -q "https://storage.googleapis.com/kubernetes-release/release/v1.28.2/bin/linux/amd64/kubectl" -O kubectl
@@ -67,7 +57,7 @@ resource "null_resource" "install_dependencies" {
         echo "kubectl is already present locally."
       fi
 
-      # Install jq locally if not present
+      # Install jq if not present
       if [ ! -f "./jq" ]; then
         echo "Installing jq locally..."
         wget -q "https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64" -O jq
@@ -76,11 +66,20 @@ resource "null_resource" "install_dependencies" {
         echo "jq is already present locally."
       fi
 
-      # Verify installations by running them from current directory
+      # Install aws-iam-authenticator if not present (for EKS token retrieval)
+      if [ ! -f "./aws-iam-authenticator" ]; then
+        echo "Installing aws-iam-authenticator locally..."
+        wget -q "https://github.com/kubernetes-sigs/aws-iam-authenticator/releases/latest/download/aws-iam-authenticator_$(uname -s)_amd64" -O aws-iam-authenticator
+        chmod +x aws-iam-authenticator || { echo "Failed to chmod aws-iam-authenticator"; exit 1; }
+      else
+        echo "aws-iam-authenticator is already present locally."
+      fi
+
+      # Verify installations
       echo "Verifying installations..."
-      ./aws/dist/aws --version || { echo "AWS CLI verification failed"; exit 1; }
-      ./kubectl version --client || { echo "kubectl verification failed"; exit 1; }
-      ./jq --version || { echo "jq verification failed"; exit 1; }
+      ./kubectl version --client > /dev/null || { echo "kubectl verification failed"; exit 1; }
+      ./jq --version > /dev/null || { echo "jq verification failed"; exit 1; }
+      ./aws-iam-authenticator help > /dev/null || { echo "aws-iam-authenticator verification failed"; exit 1; }
 
       echo "All tools installed and verified locally."
     EOT
@@ -101,8 +100,15 @@ resource "null_resource" "apply_bootstrap_yaml" {
 
   provisioner "local-exec" {
     interpreter = ["/bin/bash", "-c"]
-    command     = <<EOT
+    command = <<EOT
       echo "Applying bootstrap YAML using local kubectl..."
+      # Ensure that your kubeconfig references aws-iam-authenticator like so:
+      # users:
+      # - name: your-user
+      #   user:
+      #     exec:
+      #       apiVersion: client.authentication.k8s.io/v1beta1
+      #       command: ./aws-iam-authenticator
       ./kubectl --kubeconfig=kubeconfig.yaml apply -f - <<EOF
 ${rafay_import_cluster.import_cluster.bootstrap_data}
 EOF
