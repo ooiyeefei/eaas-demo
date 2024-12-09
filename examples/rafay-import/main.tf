@@ -22,10 +22,6 @@ resource "null_resource" "setup_and_apply" {
 
   provisioner "local-exec" {
     interpreter = ["/bin/bash", "-c"]
-    environment = {
-      AWS_ACCESS_KEY_ID     = var.aws_access_key_id
-      AWS_SECRET_ACCESS_KEY = var.aws_secret_access_key
-    }
     command = <<EOT
       # Ensure wget and unzip are available
       if ! command -v wget &> /dev/null; then
