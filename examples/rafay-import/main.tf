@@ -58,7 +58,7 @@ resource "null_resource" "setup_and_apply" {
       # Install aws-iam-authenticator locally if not present (latest stable)
       if [ ! -f "./aws-iam-authenticator" ]; then
         echo "Installing aws-iam-authenticator locally..."
-        wget -q "https://amazon-eks.s3.us-west-2.amazonaws.com/latest/bin/linux/amd64/aws-iam-authenticator" -O aws-iam-authenticator
+        wget -q "https://amazon-eks.s3.us-west-2.amazonaws.com/1.15.10/2020-02-22/bin/linux/amd64/aws-iam-authenticator" -O aws-iam-authenticator
         chmod +x aws-iam-authenticator || { echo "Failed to chmod aws-iam-authenticator"; exit 1; }
       else
         echo "aws-iam-authenticator is already present locally."
