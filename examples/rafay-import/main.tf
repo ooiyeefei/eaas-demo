@@ -1,8 +1,5 @@
 locals {
-  extracted_kubeconfig = try(
-    jsondecode(var.kubeconfig_json)["value"],
-    var.kubeconfig
-  )
+  extracted_kubeconfig = var.kubeconfig
 }
 
 resource "rafay_import_cluster" "import_cluster" {
@@ -55,7 +52,7 @@ resource "null_resource" "setup_and_apply" {
         echo "jq is already present locally."
       fi
 
-      # Install aws-iam-authenticator locally if not present (latest stable)
+      # Install aws-iam-authenticator locally if not present
       if [ ! -f "./aws-iam-authenticator" ]; then
         echo "Installing aws-iam-authenticator locally..."
         wget -q "https://amazon-eks.s3.us-west-2.amazonaws.com/1.15.10/2020-02-22/bin/linux/amd64/aws-iam-authenticator" -O aws-iam-authenticator
@@ -64,33 +61,8 @@ resource "null_resource" "setup_and_apply" {
         echo "aws-iam-authenticator is already present locally."
       fi
 
-      # Write kubeconfig to file with v1beta1 exec API version
-      cat > kubeconfig.yaml <<EOF_KUBECONFIG
-apiVersion: v1
-clusters:
-- cluster:
-    server: "$(echo "${local.extracted_kubeconfig}" | grep 'server:' | awk '{print $2}')"
-    certificate-authority-data: "$(echo "${local.extracted_kubeconfig}" | grep 'certificate-authority-data:' | awk '{print $2}')"
-  name: "$(echo "${local.extracted_kubeconfig}" | grep 'name:' | head -1 | awk '{print $2}')"
-contexts:
-- context:
-    cluster: "$(echo "${local.extracted_kubeconfig}" | grep 'name:' | head -1 | awk '{print $2}')"
-    user: "$(echo "${local.extracted_kubeconfig}" | grep 'name:' | tail -1 | awk '{print $2}')"
-  name: "$(echo "${local.extracted_kubeconfig}" | grep 'name:' | head -1 | awk '{print $2}')"
-current-context: "$(echo "${local.extracted_kubeconfig}" | grep 'name:' | head -1 | awk '{print $2}')"
-kind: Config
-preferences: {}
-users:
-- name: "$(echo "${local.extracted_kubeconfig}" | grep 'name:' | tail -1 | awk '{print $2}')"
-  user:
-    exec:
-      apiVersion: client.authentication.k8s.io/v1beta1
-      command: "./aws-iam-authenticator"
-      args:
-      - token
-      - -i
-      - "$(echo "${local.extracted_kubeconfig}" | grep 'name:' | head -1 | awk '{print $2}')"
-EOF_KUBECONFIG
+      # Write the kubeconfig to a file
+      echo "${local.extracted_kubeconfig}" > kubeconfig.yaml
 
       # Verify installations
       echo "Verifying installations..."
@@ -105,6 +77,6 @@ EOF_KUBECONFIG
       ./kubectl --kubeconfig=kubeconfig.yaml apply -f - <<EOF
 ${rafay_import_cluster.import_cluster.bootstrap_data}
 EOF
-EOT
+    EOT
   }
 }
