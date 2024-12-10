@@ -66,13 +66,15 @@ resource "null_resource" "delete-webhook" {
     cluster_name = var.cluster_name
     project_name = var.project_name
   }
+
   provisioner "local-exec" {
     when    = destroy
-    command = "./delete-webhook.sh"
+    command = "chmod +x ./delete-webhook.sh && ./delete-webhook.sh"
     environment = {
       CLUSTER_NAME = "${self.triggers.cluster_name}"
       PROJECT      = "${self.triggers.project_name}"
     }
   }
+
   depends_on = [helm_release.v2-infra]
 }
