@@ -60,3 +60,19 @@ resource "helm_release" "v2-infra" {
     ]
   }
 }
+
+resource "null_resource" "delete-webhook" {
+  triggers = {
+    cluster_name = var.cluster_name
+    project_name = var.rafay_project_name
+  }
+  provisioner "local-exec" {
+    when    = destroy
+    command = "./delete-webhook.sh"
+    environment = {
+      CLUSTER_NAME = "${self.triggers.cluster_name}"
+      PROJECT      = "${self.triggers.project_name}"
+    }
+  }
+  depends_on = [helm_release.v2-infra]
+}
