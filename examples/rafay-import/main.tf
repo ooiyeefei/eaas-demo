@@ -64,7 +64,7 @@ resource "helm_release" "v2-infra" {
 resource "null_resource" "delete-webhook" {
   triggers = {
     cluster_name = var.cluster_name
-    project_name = var.rafay_project_name
+    project_name = var.project_name
   }
   provisioner "local-exec" {
     when    = destroy
