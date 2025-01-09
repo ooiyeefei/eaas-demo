@@ -41,10 +41,14 @@ module "eks" {
     node_pools = ["general-purpose"]
   }
 
-  vpc_id     = module.vpc.vpc_id
-  subnet_ids = module.vpc.private_subnets
+  # vpc_id     = module.vpc.vpc_id
+  # subnet_ids = module.vpc.private_subnets
+  # tags = local.tags
 
-  tags = local.tags
+  vpc_id     = var.vpc_id
+  subnet_ids = var.subnet_ids
+  tags = var.tags
+  
 }
 
 module "disabled_eks" {
