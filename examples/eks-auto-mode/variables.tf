@@ -22,21 +22,3 @@ variable "cluster_compute_enabled" {
   type        = bool
   default     = true
 }
-
-variable "tags" {
-  type        = map(string)
-  default = {
-    Environment = "development"
-    Owner       = "team"
-  }
-}
-
-variable "subnet_ids" {
-  description = "List of subnet IDs for the cluster"
-  type        = list(string)
-}
-
-variable "vpc_id" {
-  description = "VPC ID where the cluster will be deployed"
-  type        = string
-}
