@@ -119,7 +119,7 @@ module "eks" {
   enable_cluster_creator_admin_permissions = true
 
   cluster_compute_config = {
-    enabled    =  var.cluster_compute_enabled
+    enabled    = var.cluster_compute_enabled
     node_pools = ["general-purpose"]
   }
 
@@ -128,4 +128,8 @@ module "eks" {
   subnet_ids = length(var.subnet_ids) > 0 ? var.subnet_ids : module.vpc[0].private_subnets
 
   tags = var.tags
+
+  # IAM Roles
+  cluster_iam_role_arn = var.cluster_iam_role_arn
+  node_iam_role_arn    = var.node_iam_role_arn
 }

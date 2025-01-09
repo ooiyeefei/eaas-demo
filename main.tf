@@ -14,7 +14,10 @@ locals {
 
   partition = data.aws_partition.current.partition
 
-  cluster_role = try(aws_iam_role.this[0].arn, var.iam_role_arn)
+  # cluster_role = try(aws_iam_role.this[0].arn, var.iam_role_arn)
+
+  cluster_role = var.cluster_iam_role_arn != "" ? var.cluster_iam_role_arn : try(aws_iam_role.this[0].arn, null)
+  node_role    = var.node_iam_role_arn != "" ? var.node_iam_role_arn : try(aws_iam_role.eks_auto[0].arn, null)
 
   create_outposts_local_cluster    = length(var.outpost_config) > 0
   enable_cluster_encryption_config = length(var.cluster_encryption_config) > 0 && !local.create_outposts_local_cluster
@@ -53,7 +56,8 @@ resource "aws_eks_cluster" "this" {
     content {
       enabled       = try(compute_config.value.enabled, null)
       node_pools    = local.auto_mode_enabled ? try(compute_config.value.node_pools, []) : null
-      node_role_arn = local.auto_mode_enabled ? try(compute_config.value.node_role_arn, aws_iam_role.eks_auto[0].arn, null) : null
+      node_role_arn = local.auto_mode_enabled ? (var.node_iam_role_arn != "" ? var.node_iam_role_arn : try(compute_config.value.node_role_arn, aws_iam_role.eks_auto[0].arn, null)) : null
+     
     }
   }
 

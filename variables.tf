@@ -685,3 +685,16 @@ variable "putin_khuylo" {
   type        = bool
   default     = true
 }
+
+
+variable "cluster_iam_role_arn" {
+  description = "IAM Role ARN for the EKS cluster. Leave empty to auto-create."
+  type        = string
+  default     = ""
+}
+
+variable "node_iam_role_arn" {
+  description = "IAM Role ARN for the EKS node role. Leave empty to auto-create."
+  type        = string
+  default     = ""
+}
