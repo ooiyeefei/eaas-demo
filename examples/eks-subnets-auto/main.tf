@@ -119,7 +119,7 @@ module "eks" {
   enable_cluster_creator_admin_permissions = true
 
   cluster_compute_config = {
-    enabled    = true
+    enabled    =  var.cluster_compute_enabled
     node_pools = ["general-purpose"]
   }
 
