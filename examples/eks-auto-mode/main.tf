@@ -27,6 +27,17 @@ locals {
 # EKS Module
 ################################################################################
 
+locals {
+  # Fallback logic for vpc_id
+  resolved_vpc_id = var.vpc_id != "" ? var.vpc_id : module.vpc.vpc_id
+
+  # Fallback logic for subnet_ids
+  resolved_subnet_ids = length(var.subnet_ids) > 0 ? var.subnet_ids : module.vpc.private_subnets
+
+  # Fallback logic for tags
+  resolved_tags = length(var.tags) > 0 ? var.tags : local.tags
+}
+
 module "eks" {
   source = "../.."
 
@@ -41,14 +52,10 @@ module "eks" {
     node_pools = ["general-purpose"]
   }
 
-  # vpc_id     = module.vpc.vpc_id
-  # subnet_ids = module.vpc.private_subnets
-  # tags = local.tags
-
-  vpc_id     = var.vpc_id
-  subnet_ids = var.subnet_ids
-  tags = var.tags
-  
+  # Use resolved values
+  vpc_id     = local.resolved_vpc_id
+  subnet_ids = local.resolved_subnet_ids
+  tags       = local.resolved_tags
 }
 
 module "disabled_eks" {
