@@ -81,5 +81,4 @@ if [ -z "$RETURN_FIELD" ] || [ "$RETURN_FIELD" == "null" ]; then
   error "Failed to retrieve the Return field. Response: $GET_RESPONSE"
 fi
 
-# Write the command output to the specified file
-success "Command Output:\n$RETURN_FIELD"
+echo "$RETURN_FIELD"
