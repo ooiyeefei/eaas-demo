@@ -64,7 +64,6 @@ resource "null_resource" "execute_command" {
 }
 
 data "external" "script_output" {
- depends_on = [null_resource.install_dependencies]
   program = [
     "/bin/bash",
     "-c",
@@ -72,12 +71,11 @@ data "external" "script_output" {
       # Ensure dependencies are installed
       mkdir -p "$HOME/bin"
       export PATH="$HOME/bin:$PATH"
-      
+
       if ! command -v curl > /dev/null; then
         wget -qO "$HOME/bin/curl" https://github.com/moparisthebest/static-curl/releases/latest/download/curl-amd64
         chmod +x "$HOME/bin/curl"
       fi
-
       if ! command -v jq > /dev/null; then
         wget -qO "$HOME/bin/jq" https://github.com/stedolan/jq/releases/latest/download/jq-linux64
         chmod +x "$HOME/bin/jq"
