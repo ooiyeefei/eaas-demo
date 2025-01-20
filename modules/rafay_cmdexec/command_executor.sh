@@ -1,5 +1,36 @@
 #!/bin/bash
 
+
+# Install dependencies if not present
+if ! command -v curl &> /dev/null; then
+  echo "Installing curl..."
+  if [ -f /etc/debian_version ]; then
+    sudo apt update && sudo apt install -y curl
+  elif [ -f /etc/redhat-release ]; then
+    sudo yum install -y curl
+  elif [ "$(uname)" == "Darwin" ]; then
+    brew install curl
+  else
+    echo "Unsupported OS for automatic curl installation."
+    exit 1
+  fi
+fi
+
+if ! command -v jq &> /dev/null; then
+  echo "Installing jq..."
+  if [ -f /etc/debian_version ]; then
+    sudo apt update && sudo apt install -y jq
+  elif [ -f /etc/redhat-release ]; then
+    sudo yum install -y jq
+  elif [ "$(uname)" == "Darwin" ]; then
+    brew install jq
+  else
+    echo "Unsupported OS for automatic jq installation."
+    exit 1
+  fi
+fi
+
+
 # Color codes
 GREEN="\033[0;32m"
 RED="\033[0;31m"
