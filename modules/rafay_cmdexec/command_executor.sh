@@ -78,17 +78,16 @@ GET_RESPONSE=$(curl -s -X GET \
 RETURN_FIELD=$(echo "$GET_RESPONSE" | jq -r '.NodeResponses[0].Resp.Return')
 
 if [ -z "$RETURN_FIELD" ] || [ "$RETURN_FIELD" == "null" ]; then
-  error "Failed to retrieve the Return field. Response: $GET_RESPONSE"
+  echo "Error: Failed to retrieve the Return field. Response: $GET_RESPONSE" >&2
+  exit 1
 fi
 
-# Define the output file path
-OUTPUT_FILE="${HOME}/command_output.txt"
+# Write the output to a file in the Terraform workspace
+OUTPUT_FILE="command_output.txt"
+echo -e "$RETURN_FIELD" > "$OUTPUT_FILE"
 
-# Write the command output to a file
-echo -e "Command Output:\n$RETURN_FIELD" > "$OUTPUT_FILE"
+# Display the output in the console
+echo -e "Command Output:\n$RETURN_FIELD"
 
-# Display command output
-success "Command Output:\n$RETURN_FIELD"
-
-echo "Command output written to $OUTPUT_FILE"
-
+# Exit successfully
+exit 0
