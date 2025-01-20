@@ -1,9 +1,17 @@
+# Resource to install dependencies on Alpine Linux
 resource "null_resource" "install_dependencies" {
   provisioner "local-exec" {
     command = <<EOT
-      echo "Installing curl and jq on Alpine Linux using wget..."
-      apk add --no-cache wget || { echo "Error: Failed to install wget."; exit 1; }
-      apk add --no-cache curl jq || { echo "Error: Failed to install curl and jq."; exit 1; }
+      echo "Installing curl and jq on Alpine Linux..."
+      if ! command -v curl > /dev/null || ! command -v jq > /dev/null; then
+        if [ "$(id -u)" -ne 0 ]; then
+          echo "Error: This script must be run as root to install dependencies."
+          exit 1
+        fi
+        apk add --no-cache curl jq || { echo "Error: Failed to install curl and jq."; exit 1; }
+      else
+        echo "Dependencies already installed."
+      fi
     EOT
   }
 
