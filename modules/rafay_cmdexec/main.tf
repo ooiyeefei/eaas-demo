@@ -64,16 +64,17 @@ resource "null_resource" "execute_command" {
 }
 
 data "external" "command_output" {
-   depends_on = [null_resource.install_dependencies]
-     program = [
-      "/bin/bash",
-      "${path.module}/command_executor.sh",
-      var.base_url,
-      var.api_key,
-      var.project_name,
-      var.cluster_name,
-      var.command,
-      var.timeout,
+  depends_on = [null_resource.install_dependencies]
+
+  program = [
+    "/bin/bash",
+    "${path.module}/command_executor.sh",
+    var.base_url,
+    var.api_key,
+    var.project_name,
+    var.cluster_name,
+    var.command,
+    var.timeout,
   ]
 }
 
