@@ -59,3 +59,14 @@ resource "null_resource" "execute_command" {
     timeout         = var.timeout
   }
 }
+
+
+locals {
+  command_result = jsondecode(shell(
+    "cat ${path.module}/command_output.json"
+  ))["command_output"]
+}
+
+output "command_result" {
+  value = local.command_result
+}
