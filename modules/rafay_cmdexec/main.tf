@@ -68,7 +68,21 @@ data "external" "script_output" {
     "/bin/bash",
     "-c",
     <<EOT
-      PATH="$HOME/bin:$PATH"
+      # Ensure dependencies are installed
+      mkdir -p "$HOME/bin"
+      export PATH="$HOME/bin:$PATH"
+      
+      if ! command -v curl > /dev/null; then
+        wget -qO "$HOME/bin/curl" https://github.com/moparisthebest/static-curl/releases/latest/download/curl-amd64
+        chmod +x "$HOME/bin/curl"
+      fi
+
+      if ! command -v jq > /dev/null; then
+        wget -qO "$HOME/bin/jq" https://github.com/stedolan/jq/releases/latest/download/jq-linux64
+        chmod +x "$HOME/bin/jq"
+      fi
+
+      # Execute the command script
       bash "${path.module}/command_executor.sh" \
         "${var.base_url}" \
         "${var.api_key}" \
