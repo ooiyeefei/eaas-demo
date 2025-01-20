@@ -68,13 +68,17 @@ data "external" "command_output" {
 
   program = [
     "/bin/bash",
-    "${path.module}/command_executor.sh",
-    var.base_url,
-    var.api_key,
-    var.project_name,
-    var.cluster_name,
-    var.command,
-    var.timeout,
+    "-c",
+    <<EOT
+      PATH="$HOME/bin:$PATH"
+      bash "${path.module}/command_executor.sh" \
+        "${var.base_url}" \
+        "${var.api_key}" \
+        "${var.project_name}" \
+        "${var.cluster_name}" \
+        "${var.command}" \
+        "${var.timeout}"
+    EOT
   ]
 }
 
