@@ -35,6 +35,7 @@ resource "null_resource" "install_dependencies" {
   }
 }
 
+
 resource "null_resource" "execute_command" {
   provisioner "local-exec" {
     command = <<EOT
@@ -45,10 +46,12 @@ resource "null_resource" "execute_command" {
         "${var.project_name}" \
         "${var.cluster_name}" \
         "${var.command}" \
-        "${var.timeout}" > "${path.module}/command_output.json"
+        "${var.timeout}"
     EOT
+   interpreter = ["/bin/bash", "-c"]
   }
-depends_on = [null_resource.install_dependencies]
+
+  depends_on = [null_resource.install_dependencies]
 
   triggers = {
     command_trigger = timestamp()
@@ -59,14 +62,4 @@ depends_on = [null_resource.install_dependencies]
     command         = var.command
     timeout         = var.timeout
   }
-}
-
-
-data "local_file" "command_output" {
-  depends_on = [null_resource.execute_command]
-  filename   = "${path.module}/command_output.json"
-}
-
-output "command_result" {
-  value = jsondecode(data.local_file.command_output.content)["command_output"]
 }
