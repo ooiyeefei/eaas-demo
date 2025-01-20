@@ -8,13 +8,13 @@ variable "api_key" {
   type        = string
 }
 
-variable "project_id" {
-  description = "The ID of the Rafay project."
+variable "project_name" {
+  description = "The name of the Rafay project."
   type        = string
 }
 
-variable "cluster_id" {
-  description = "The ID of the Rafay cluster."
+variable "cluster_name" {
+  description = "The name of the Rafay cluster."
   type        = string
 }
 
