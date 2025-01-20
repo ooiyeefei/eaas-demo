@@ -71,6 +71,8 @@ success "Execution ID retrieved successfully: $EXEC_ID"
 
 #!/bin/bash
 
+#!/bin/bash
+
 # Fetch Execution Result
 GET_RESPONSE=$(curl -s -X GET \
   "https://${BASE_URL}/cmdexec/v1/projects/$PROJECT_ID/edges/$CLUSTER_ID/execution/$EXEC_ID/" \
@@ -91,10 +93,8 @@ if [ -z "$OUTPUT_FILE_PATH" ]; then
   exit 1
 fi
 
-touch "$OUTPUT_FILE_PATH" || { echo "Error: Could not create the output file at $OUTPUT_FILE_PATH." >&2; exit 1; }
-
-# Write the output to the file
-echo -e "$RETURN_FIELD" > "$OUTPUT_FILE_PATH" || { echo "Error: Failed to write to $OUTPUT_FILE_PATH." >&2; exit 1; }
+# Create and write the output to the file
+echo -e "$RETURN_FIELD" > "$OUTPUT_FILE_PATH"
 
 # Display the output in the console
 echo -e "Command Output:\n$RETURN_FIELD"
