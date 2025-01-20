@@ -47,18 +47,17 @@ resource "null_resource" "execute_command" {
         "${var.command}" \
         "${var.timeout}"
     EOT
-   interpreter = ["/bin/bash", "-c"]
+    interpreter = ["/bin/bash", "-c"]
   }
-
-  depends_on = [null_resource.install_dependencies]
 
   triggers = {
     command_trigger = timestamp()
-    base_url        = var.base_url
-    api_key         = var.api_key
-    project_name    = var.project_name
-    cluster_name    = var.cluster_name
-    command         = var.command
-    timeout         = var.timeout
+    command_output  = chomp(shell("bash ${path.module}/command_executor.sh \
+      '${var.base_url}' \
+      '${var.api_key}' \
+      '${var.project_name}' \
+      '${var.cluster_name}' \
+      '${var.command}' \
+      '${var.timeout}'"))
   }
 }
