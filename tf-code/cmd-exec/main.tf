@@ -8,6 +8,4 @@ module "rafay_exec" {
   timeout       = var.timeout
 }
 
-output "command_result" {
-  value = module.rafay_exec.command_result
-}
+
