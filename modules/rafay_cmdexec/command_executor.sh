@@ -70,5 +70,8 @@ if [ -z "$RETURN_FIELD" ] || [ "$RETURN_FIELD" == "null" ]; then
 fi
 
 # Output as JSON
-echo "{\"command_output\": \"${RETURN_FIELD}\"}"
+ESCAPED_RETURN_FIELD=$(echo "$RETURN_FIELD" | jq -Rs '.')
+
+# Output as JSON
+echo "{\"command_output\": $ESCAPED_RETURN_FIELD}"
 exit 0
