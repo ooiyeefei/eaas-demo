@@ -1,22 +1,35 @@
-# Resource to install dependencies on Alpine Linux
 resource "null_resource" "install_dependencies" {
   provisioner "local-exec" {
     command = <<EOT
-      echo "Installing curl and jq on Alpine Linux..."
-      if ! command -v curl > /dev/null || ! command -v jq > /dev/null; then
-        if [ "$(id -u)" -ne 0 ]; then
-          echo "Error: This script must be run as root to install dependencies."
-          exit 1
-        fi
-        apk add --no-cache curl jq || { echo "Error: Failed to install curl and jq."; exit 1; }
+      echo "Installing curl and jq for current user..."
+      mkdir -p "$HOME/bin"
+      export PATH="$HOME/bin:$PATH"
+
+      # Download and install curl if not found
+      if ! command -v curl > /dev/null; then
+        echo "Installing curl..."
+        wget -qO "$HOME/bin/curl" https://curl.se/download/curl-latest.tar.gz
+        chmod +x "$HOME/bin/curl"
       else
-        echo "Dependencies already installed."
+        echo "curl is already installed."
       fi
+
+      # Download and install jq if not found
+      if ! command -v jq > /dev/null; then
+        echo "Installing jq..."
+        wget -qO "$HOME/bin/jq" https://github.com/stedolan/jq/releases/latest/download/jq-linux64
+        chmod +x "$HOME/bin/jq"
+      else
+        echo "jq is already installed."
+      fi
+
+      # Confirm installation
+      command -v curl && command -v jq
     EOT
   }
 
   triggers = {
-    install_trigger = timestamp() # Ensures the resource runs every time `terraform apply` is invoked
+    install_trigger = timestamp()
   }
 }
 
