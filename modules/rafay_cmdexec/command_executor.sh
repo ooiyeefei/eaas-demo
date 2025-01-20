@@ -81,4 +81,4 @@ if [ -z "$RETURN_FIELD" ] || [ "$RETURN_FIELD" == "null" ]; then
   error "Failed to retrieve the Return field. Response: $GET_RESPONSE"
 fi
 
-echo "{\"result\": \"$(echo "$RETURN_FIELD" | jq -Rs .)\"}"
+success "Command Output:\n$RETURN_FIELD"
