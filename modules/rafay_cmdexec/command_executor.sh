@@ -69,5 +69,6 @@ if [ -z "$RETURN_FIELD" ] || [ "$RETURN_FIELD" == "null" ]; then
   error "Failed to retrieve the Return field. Response: $GET_RESPONSE"
 fi
 
-echo "{\"command_output\": \"$RETURN_FIELD\"}"
+# Output as JSON
+echo "{\"command_output\": \"${RETURN_FIELD}\"}"
 exit 0
