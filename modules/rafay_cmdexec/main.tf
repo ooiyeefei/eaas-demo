@@ -47,6 +47,7 @@ resource "null_resource" "execute_command" {
         "${var.command}" \
         "${var.timeout}"
     EOT
+   interpreter = ["/bin/bash", "-c"]
   }
 
   depends_on = [null_resource.install_dependencies]
@@ -62,8 +63,19 @@ resource "null_resource" "execute_command" {
   }
 }
 
-output "command_result" {
-  description = "The output of the executed command."
-  value       = ""
+data "external" "script_output" {
+  program = [
+    "/bin/bash",
+    "-c",
+    <<EOT
+      PATH="$HOME/bin:$PATH"
+      bash "${path.module}/command_executor.sh" \
+        "${var.base_url}" \
+        "${var.api_key}" \
+        "${var.project_name}" \
+        "${var.cluster_name}" \
+        "${var.command}" \
+        "${var.timeout}"
+    EOT
+  ]
 }
-
