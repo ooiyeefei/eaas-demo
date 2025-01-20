@@ -1,7 +1,5 @@
 #!/bin/bash
 
-#!/bin/bash
-
 # Function to detect OS and install dependencies
 install_dependencies() {
   echo "Detecting operating system..."
@@ -23,21 +21,21 @@ install_dependencies() {
   case "$OS" in
     ubuntu|debian)
       echo "Installing curl and jq for $OS..."
-      sudo apt update && sudo apt install -y curl jq || {
+      apt update && apt install -y curl jq || {
         echo "Error: Failed to install dependencies on $OS."
         exit 1
       }
       ;;
     centos|rhel|fedora)
       echo "Installing curl and jq for $OS..."
-      sudo yum install -y curl jq || {
+      yum install -y curl jq || {
         echo "Error: Failed to install dependencies on $OS."
         exit 1
       }
       ;;
     alpine)
       echo "Installing curl and jq for Alpine Linux..."
-      sudo apk add --no-cache curl jq || {
+      apk add --no-cache curl jq || {
         echo "Error: Failed to install dependencies on Alpine Linux."
         exit 1
       }
@@ -58,6 +56,8 @@ install_dependencies() {
 
 # Call the function to install dependencies
 install_dependencies
+
+# Remaining logic for fetching project ID, cluster ID, and executing commands...
 
 # Color codes
 GREEN="\033[0;32m"
