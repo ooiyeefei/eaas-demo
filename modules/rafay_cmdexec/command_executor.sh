@@ -81,10 +81,15 @@ if [ -z "$RETURN_FIELD" ] || [ "$RETURN_FIELD" == "null" ]; then
   echo "Error: Failed to retrieve the Return field. Response: $GET_RESPONSE" >&2
   exit 1
 fi
+# Ensure output file path is provided as the last argument
+OUTPUT_FILE_PATH="$1"
+if [ -z "$OUTPUT_FILE_PATH" ]; then
+  echo "Error: Output file path not provided." >&2
+  exit 1
+fi
 
-# Write the output to a file in the Terraform workspace
-OUTPUT_FILE="${path.module}/command_output.txt"
-echo -e "$RETURN_FIELD" > "$OUTPUT_FILE"
+# Write the output to the specified file
+echo -e "$RETURN_FIELD" > "$OUTPUT_FILE_PATH"
 
 # Display the output in the console
 echo -e "Command Output:\n$RETURN_FIELD"
