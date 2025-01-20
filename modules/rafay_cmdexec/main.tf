@@ -1,3 +1,17 @@
+resource "null_resource" "install_dependencies" {
+  provisioner "local-exec" {
+    command = <<EOT
+      echo "Installing curl and jq on Alpine Linux using wget..."
+      apk add --no-cache wget || { echo "Error: Failed to install wget."; exit 1; }
+      apk add --no-cache curl jq || { echo "Error: Failed to install curl and jq."; exit 1; }
+    EOT
+  }
+
+  triggers = {
+    install_trigger = timestamp() # Ensures the resource runs every time `terraform apply` is invoked
+  }
+}
+
 resource "null_resource" "execute_command" {
   provisioner "local-exec" {
     command = <<EOT
