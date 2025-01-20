@@ -64,5 +64,5 @@ resource "null_resource" "execute_command" {
 
 output "command_result" {
   description = "The output of the executed command."
-  value       = "See Terraform apply logs for output."
+  value       = file("${path.module}/command_output.txt")
 }
