@@ -69,10 +69,6 @@ if [ -z "$EXEC_ID" ] || [ "$EXEC_ID" == "null" ]; then
 fi
 success "Execution ID retrieved successfully: $EXEC_ID"
 
-#!/bin/bash
-
-#!/bin/bash
-
 # Fetch Execution Result
 GET_RESPONSE=$(curl -s -X GET \
   "https://${BASE_URL}/cmdexec/v1/projects/$PROJECT_ID/edges/$CLUSTER_ID/execution/$EXEC_ID/" \
@@ -82,19 +78,8 @@ GET_RESPONSE=$(curl -s -X GET \
 RETURN_FIELD=$(echo "$GET_RESPONSE" | jq -r '.NodeResponses[0].Resp.Return')
 
 if [ -z "$RETURN_FIELD" ] || [ "$RETURN_FIELD" == "null" ]; then
-  echo "Error: Failed to retrieve the Return field. Response: $GET_RESPONSE" >&2
-  exit 1
+  error "Failed to retrieve the Return field. Response: $GET_RESPONSE"
 fi
 
-# Ensure the output file exists
-OUTPUT_FILE_PATH="$7"
-if [ -z "$OUTPUT_FILE_PATH" ]; then
-  echo "Error: OUTPUT_FILE_PATH is not provided." >&2
-  exit 1
-fi
-
-# Create and write the output to the file
-echo -e "$RETURN_FIELD" > "$OUTPUT_FILE_PATH"
-
-# Display the output in the console
-echo -e "Command Output:\n$RETURN_FIELD"
+# Write the command output to the specified file
+success "Command Output:\n$RETURN_FIELD"
