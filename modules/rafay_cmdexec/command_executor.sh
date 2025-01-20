@@ -70,3 +70,4 @@ if [ -z "$RETURN_FIELD" ] || [ "$RETURN_FIELD" == "null" ]; then
 fi
 
 echo "{\"command_output\": \"$RETURN_FIELD\"}"
+exit 0
