@@ -64,5 +64,5 @@ resource "null_resource" "execute_command" {
 
 output "command_result" {
   description = "The output of the executed command."
-  value       = file("${path.module}/command_output.txt")
+  value       = chomp(join("", [for file_path in ["${path.module}/command_output.txt"]: fileexists(file_path) ? file(file_path) : "Command output not yet available."]))
 }
