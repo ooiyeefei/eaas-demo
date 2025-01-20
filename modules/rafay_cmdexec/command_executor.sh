@@ -1,42 +1,53 @@
 #!/bin/bash
 
-#!/bin/bash
-
 # Function to detect OS and install dependencies
 install_dependencies() {
-  # Detect OS
+  echo "Detecting operating system..."
+
+  # Detect OS using os-release or uname
   if [ -f /etc/os-release ]; then
     . /etc/os-release
     OS=$ID
   elif [ "$(uname)" == "Darwin" ]; then
     OS="macos"
   else
-    OS="unsupported"
+    OS="unknown"
   fi
+
+  # Log detected OS
+  echo "Detected OS: $OS"
 
   # Install curl and jq based on detected OS
   case "$OS" in
     ubuntu|debian)
-      echo "Detected OS: $OS. Installing curl and jq..."
-      sudo apt update && sudo apt install -y curl jq
+      echo "Installing curl and jq for $OS..."
+      sudo apt update && sudo apt install -y curl jq || {
+        echo "Error: Failed to install dependencies on $OS."
+        exit 1
+      }
       ;;
     centos|rhel|fedora)
-      echo "Detected OS: $OS. Installing curl and jq..."
-      sudo yum install -y curl jq
+      echo "Installing curl and jq for $OS..."
+      sudo yum install -y curl jq || {
+        echo "Error: Failed to install dependencies on $OS."
+        exit 1
+      }
       ;;
     macos)
-      echo "Detected OS: macOS. Installing curl and jq..."
-      brew install curl jq
+      echo "Installing curl and jq for macOS..."
+      brew install curl jq || {
+        echo "Error: Failed to install dependencies on macOS."
+        exit 1
+      }
       ;;
     *)
-      echo "Error: Unsupported OS. Please install curl and jq manually."
+      echo "Error: Unsupported OS detected. Please install curl and jq manually."
       exit 1
       ;;
   esac
 }
 
 # Call the function to install dependencies
-
 install_dependencies
 
 # Color codes
