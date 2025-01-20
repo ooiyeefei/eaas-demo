@@ -26,7 +26,7 @@ resource "null_resource" "install_dependencies" {
       fi
 
       # Confirm installations
-      curl --version && jq --version
+      "$HOME/bin/curl" --version && "$HOME/bin/jq" --version
     EOT
   }
 
@@ -34,9 +34,11 @@ resource "null_resource" "install_dependencies" {
     install_trigger = timestamp()
   }
 }
+
 resource "null_resource" "execute_command" {
   provisioner "local-exec" {
     command = <<EOT
+      PATH="$HOME/bin:$PATH"
       bash "${path.module}/command_executor.sh" \
         "${var.base_url}" \
         "${var.api_key}" \
@@ -47,8 +49,10 @@ resource "null_resource" "execute_command" {
     EOT
   }
 
+  depends_on = [null_resource.install_dependencies]
+
   triggers = {
-    command_trigger = timestamp() # Ensures the resource runs every time `terraform apply` is invoked
+    command_trigger = timestamp()
     base_url        = var.base_url
     api_key         = var.api_key
     project_name    = var.project_name
