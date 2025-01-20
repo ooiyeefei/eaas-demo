@@ -69,6 +69,8 @@ if [ -z "$EXEC_ID" ] || [ "$EXEC_ID" == "null" ]; then
 fi
 success "Execution ID retrieved successfully: $EXEC_ID"
 
+#!/bin/bash
+
 # Fetch Execution Result
 GET_RESPONSE=$(curl -s -X GET \
   "https://${BASE_URL}/cmdexec/v1/projects/$PROJECT_ID/edges/$CLUSTER_ID/execution/$EXEC_ID/" \
@@ -81,18 +83,18 @@ if [ -z "$RETURN_FIELD" ] || [ "$RETURN_FIELD" == "null" ]; then
   echo "Error: Failed to retrieve the Return field. Response: $GET_RESPONSE" >&2
   exit 1
 fi
-# Ensure output file path is provided as the last argument
-OUTPUT_FILE_PATH="$1"
+
+# Ensure the output file exists
+OUTPUT_FILE_PATH="$7"
 if [ -z "$OUTPUT_FILE_PATH" ]; then
-  echo "Error: Output file path not provided." >&2
+  echo "Error: OUTPUT_FILE_PATH is not provided." >&2
   exit 1
 fi
 
-# Write the output to the specified file
-echo -e "$RETURN_FIELD" > "$OUTPUT_FILE_PATH"
+touch "$OUTPUT_FILE_PATH" || { echo "Error: Could not create the output file at $OUTPUT_FILE_PATH." >&2; exit 1; }
+
+# Write the output to the file
+echo -e "$RETURN_FIELD" > "$OUTPUT_FILE_PATH" || { echo "Error: Failed to write to $OUTPUT_FILE_PATH." >&2; exit 1; }
 
 # Display the output in the console
 echo -e "Command Output:\n$RETURN_FIELD"
-
-# Exit successfully
-exit 0
