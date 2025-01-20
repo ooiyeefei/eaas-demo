@@ -48,6 +48,7 @@ resource "null_resource" "execute_command" {
         "${var.timeout}" > "${path.module}/command_output.json"
     EOT
   }
+depends_on = [null_resource.install_dependencies]
 
   triggers = {
     command_trigger = timestamp()
