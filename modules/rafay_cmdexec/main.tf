@@ -64,6 +64,7 @@ resource "null_resource" "execute_command" {
 }
 
 data "external" "script_output" {
+ depends_on = [null_resource.install_dependencies]
   program = [
     "/bin/bash",
     "-c",
