@@ -1,10 +1,12 @@
 #!/bin/bash
 
+#!/bin/bash
+
 # Function to detect OS and install dependencies
 install_dependencies() {
   echo "Detecting operating system..."
 
-  # Detect OS using os-release or uname
+  # Detect OS
   if [ -f /etc/os-release ]; then
     . /etc/os-release
     OS=$ID
@@ -30,6 +32,13 @@ install_dependencies() {
       echo "Installing curl and jq for $OS..."
       sudo yum install -y curl jq || {
         echo "Error: Failed to install dependencies on $OS."
+        exit 1
+      }
+      ;;
+    alpine)
+      echo "Installing curl and jq for Alpine Linux..."
+      sudo apk add --no-cache curl jq || {
+        echo "Error: Failed to install dependencies on Alpine Linux."
         exit 1
       }
       ;;
