@@ -45,7 +45,7 @@ resource "null_resource" "execute_command" {
         "${var.project_name}" \
         "${var.cluster_name}" \
         "${var.command}" \
-        "${var.timeout}"
+        "${var.timeout}" /dev/null 2>&1
     EOT
   }
 
@@ -64,5 +64,5 @@ resource "null_resource" "execute_command" {
 
 output "command_result" {
   description = "The output of the executed command."
-  value       = "See Terraform apply logs for output."
+  value       = chomp(join("", fileset(path.module, "command_output.txt")))
 }
