@@ -61,12 +61,11 @@ resource "null_resource" "execute_command" {
 }
 
 
-locals {
-  command_result = jsondecode(shell(
-    "cat ${path.module}/command_output.json"
-  ))["command_output"]
+data "local_file" "command_output" {
+  depends_on = [null_resource.execute_command]
+  filename   = "${path.module}/command_output.json"
 }
 
 output "command_result" {
-  value = local.command_result
+  value = jsondecode(data.local_file.command_output.content)["command_output"]
 }
