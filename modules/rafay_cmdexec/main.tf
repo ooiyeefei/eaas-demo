@@ -39,17 +39,18 @@ resource "null_resource" "execute_command" {
   provisioner "local-exec" {
     command = <<EOT
       PATH="$HOME/bin:$PATH"
-      RETURN_FIELD=$(bash "${path.module}/command_executor.sh" \
+      bash "${path.module}/command_executor.sh" \
         "${var.base_url}" \
         "${var.api_key}" \
         "${var.project_name}" \
         "${var.cluster_name}" \
         "${var.command}" \
-        "${var.timeout}")
-      echo "$RETURN_FIELD"
+        "${var.timeout}"
     EOT
-    interpreter = ["/bin/bash", "-c"]
+   interpreter = ["/bin/bash", "-c"]
   }
+
+  depends_on = [null_resource.install_dependencies]
 
   triggers = {
     command_trigger = timestamp()
@@ -59,11 +60,5 @@ resource "null_resource" "execute_command" {
     cluster_name    = var.cluster_name
     command         = var.command
     timeout         = var.timeout
-    command_output  = chomp("${self.triggers.command_output}")
   }
 }
-
-output "command_result" {
-  value = null_resource.execute_command.triggers.command_output
-}
-
