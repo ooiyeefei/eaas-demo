@@ -46,7 +46,7 @@ resource "null_resource" "execute_command" {
         "${var.cluster_name}" \
         "${var.command}" \
         "${var.timeout}")
-      echo "{\"command_output\": \"$RETURN_FIELD\"}" > ${path.module}/command_output.json
+      echo "$RETURN_FIELD"
     EOT
     interpreter = ["/bin/bash", "-c"]
   }
@@ -59,9 +59,11 @@ resource "null_resource" "execute_command" {
     cluster_name    = var.cluster_name
     command         = var.command
     timeout         = var.timeout
+    command_output  = chomp("${self.triggers.command_output}")
   }
 }
 
 output "command_result" {
-  value = jsondecode(file("${path.module}/command_output.json")).command_output
+  value = null_resource.execute_command.triggers.command_output
 }
+
