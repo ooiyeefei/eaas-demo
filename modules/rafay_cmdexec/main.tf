@@ -1,30 +1,36 @@
 resource "null_resource" "install_dependencies" {
   provisioner "local-exec" {
     command = <<EOT
-      echo "Installing curl and jq for current user..."
+      echo "Installing curl and jq for the current user..."
       mkdir -p "$HOME/bin"
       export PATH="$HOME/bin:$PATH"
 
-      # Download and install curl if not found
+      # Install curl
       if ! command -v curl > /dev/null; then
         echo "Installing curl..."
-        wget -qO "$HOME/bin/curl" https://curl.se/download/curl-latest.tar.gz
-        chmod +x "$HOME/bin/curl"
+        wget -qO- https://curl.se/download/curl-7.87.0.tar.gz | tar -xz
+        cd curl-7.87.0
+        ./configure --prefix=$HOME
+        make && make install
+        cd ..
+        rm -rf curl-7.87.0
+        echo "curl installed successfully."
       else
         echo "curl is already installed."
       fi
 
-      # Download and install jq if not found
+      # Install jq
       if ! command -v jq > /dev/null; then
         echo "Installing jq..."
         wget -qO "$HOME/bin/jq" https://github.com/stedolan/jq/releases/latest/download/jq-linux64
         chmod +x "$HOME/bin/jq"
+        echo "jq installed successfully."
       else
         echo "jq is already installed."
       fi
 
       # Confirm installation
-      command -v curl && command -v jq
+      curl --version && jq --version
     EOT
   }
 
