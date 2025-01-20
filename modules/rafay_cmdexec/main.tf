@@ -45,12 +45,9 @@ resource "null_resource" "execute_command" {
         "${var.project_name}" \
         "${var.cluster_name}" \
         "${var.command}" \
-        "${var.timeout}"
+        "${var.timeout}" > "${path.module}/command_output.json"
     EOT
-   interpreter = ["/bin/bash", "-c"]
   }
-
-  depends_on = [null_resource.install_dependencies]
 
   triggers = {
     command_trigger = timestamp()
