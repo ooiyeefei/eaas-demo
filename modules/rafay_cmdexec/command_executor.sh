@@ -83,7 +83,7 @@ if [ -z "$RETURN_FIELD" ] || [ "$RETURN_FIELD" == "null" ]; then
 fi
 
 # Write the output to a file in the Terraform workspace
-OUTPUT_FILE="command_output.txt"
+OUTPUT_FILE="${path.module}/command_output.txt"
 echo -e "$RETURN_FIELD" > "$OUTPUT_FILE"
 
 # Display the output in the console
