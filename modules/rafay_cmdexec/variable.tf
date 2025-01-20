@@ -22,3 +22,9 @@ variable "command" {
   description = "Command to execute"
   type        = string
 }
+
+variable "timeout" {
+  description = "The timeout for command execution (in seconds)."
+  type        = number
+  default     = 120
+}
