@@ -29,7 +29,6 @@ error() {
   exit 1
 }
 
-# Fetch Project ID
 PROJECT_ID=$(curl -s -X GET "https://${BASE_URL}/auth/v1/projects/?limit=48&offset=0&order=ASC&orderby=name&q=" \
   -H "X-RAFAY-API-KEYID: ${API_KEY}" \
   | jq -r --arg name "${PROJECT_NAME}" '.results[] | select(.name == $name) | .id')
@@ -39,7 +38,6 @@ if [ -z "$PROJECT_ID" ]; then
 fi
 success "Project ID fetched successfully: $PROJECT_ID"
 
-# Fetch Cluster ID
 CLUSTER_ID=$(curl -s -X GET "https://${BASE_URL}/edge/v1/projects/$PROJECT_ID/edges/?limit=25&offset=0&q=" \
   -H "X-RAFAY-API-KEYID: ${API_KEY}" \
   | jq -r --arg name "${CLUSTER_NAME}" '.results[] | select(.name == $name) | .id')
@@ -49,7 +47,6 @@ if [ -z "$CLUSTER_ID" ]; then
 fi
 success "Cluster ID fetched successfully: $CLUSTER_ID"
 
-# Execute Command
 POST_RESPONSE=$(curl -s -X POST \
   "https://${BASE_URL}/cmdexec/v1/projects/$PROJECT_ID/edges/$CLUSTER_ID/execute/" \
   -H "X-RAFAY-API-KEYID: ${API_KEY}" \
@@ -62,7 +59,6 @@ if [ -z "$EXEC_ID" ] || [ "$EXEC_ID" == "null" ]; then
 fi
 success "Execution ID retrieved successfully: $EXEC_ID"
 
-# Fetch Execution Result
 GET_RESPONSE=$(curl -s -X GET \
   "https://${BASE_URL}/cmdexec/v1/projects/$PROJECT_ID/edges/$CLUSTER_ID/execution/$EXEC_ID/" \
   -H "X-RAFAY-API-KEYID: ${API_KEY}")
