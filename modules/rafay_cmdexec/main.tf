@@ -39,17 +39,17 @@ resource "null_resource" "execute_command" {
   provisioner "local-exec" {
     command = <<EOT
       PATH="$HOME/bin:$PATH"
-      OUTPUT_FILE_PATH="${path.module}/command_output.txt"
       bash "${path.module}/command_executor.sh" \
         "${var.base_url}" \
         "${var.api_key}" \
         "${var.project_name}" \
         "${var.cluster_name}" \
         "${var.command}" \
-        "${var.timeout}" \
-        "$OUTPUT_FILE_PATH"
+        "${var.timeout}"
     EOT
   }
+
+  depends_on = [null_resource.install_dependencies]
 
   triggers = {
     command_trigger = timestamp()
@@ -64,5 +64,6 @@ resource "null_resource" "execute_command" {
 
 output "command_result" {
   description = "The output of the executed command."
-  value       = chomp(join("", [for file_path in ["${path.module}/command_output.txt"]: fileexists(file_path) ? file(file_path) : "Command output not yet available."]))
+  value       = ""
 }
+
