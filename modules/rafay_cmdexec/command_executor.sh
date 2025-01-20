@@ -1,35 +1,43 @@
 #!/bin/bash
 
+#!/bin/bash
 
-# Install dependencies if not present
-if ! command -v curl &> /dev/null; then
-  echo "Installing curl..."
-  if [ -f /etc/debian_version ]; then
-    sudo apt update && sudo apt install -y curl
-  elif [ -f /etc/redhat-release ]; then
-    sudo yum install -y curl
+# Function to detect OS and install dependencies
+install_dependencies() {
+  # Detect OS
+  if [ -f /etc/os-release ]; then
+    . /etc/os-release
+    OS=$ID
   elif [ "$(uname)" == "Darwin" ]; then
-    brew install curl
+    OS="macos"
   else
-    echo "Unsupported OS for automatic curl installation."
-    exit 1
+    OS="unsupported"
   fi
-fi
 
-if ! command -v jq &> /dev/null; then
-  echo "Installing jq..."
-  if [ -f /etc/debian_version ]; then
-    sudo apt update && sudo apt install -y jq
-  elif [ -f /etc/redhat-release ]; then
-    sudo yum install -y jq
-  elif [ "$(uname)" == "Darwin" ]; then
-    brew install jq
-  else
-    echo "Unsupported OS for automatic jq installation."
-    exit 1
-  fi
-fi
+  # Install curl and jq based on detected OS
+  case "$OS" in
+    ubuntu|debian)
+      echo "Detected OS: $OS. Installing curl and jq..."
+      sudo apt update && sudo apt install -y curl jq
+      ;;
+    centos|rhel|fedora)
+      echo "Detected OS: $OS. Installing curl and jq..."
+      sudo yum install -y curl jq
+      ;;
+    macos)
+      echo "Detected OS: macOS. Installing curl and jq..."
+      brew install curl jq
+      ;;
+    *)
+      echo "Error: Unsupported OS. Please install curl and jq manually."
+      exit 1
+      ;;
+  esac
+}
 
+# Call the function to install dependencies
+
+install_dependencies
 
 # Color codes
 GREEN="\033[0;32m"
