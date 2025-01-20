@@ -39,18 +39,17 @@ resource "null_resource" "execute_command" {
   provisioner "local-exec" {
     command = <<EOT
       PATH="$HOME/bin:$PATH"
-      bash "${path.module}/command_executor.sh" \
+      RETURN_FIELD=$(bash "${path.module}/command_executor.sh" \
         "${var.base_url}" \
         "${var.api_key}" \
         "${var.project_name}" \
         "${var.cluster_name}" \
         "${var.command}" \
-        "${var.timeout}"
+        "${var.timeout}")
+      echo "{\"command_output\": \"$RETURN_FIELD\"}" > ${path.module}/command_output.json
     EOT
-   interpreter = ["/bin/bash", "-c"]
+    interpreter = ["/bin/bash", "-c"]
   }
-
-  depends_on = [null_resource.install_dependencies]
 
   triggers = {
     command_trigger = timestamp()
@@ -61,4 +60,8 @@ resource "null_resource" "execute_command" {
     command         = var.command
     timeout         = var.timeout
   }
+}
+
+output "command_result" {
+  value = jsondecode(file("${path.module}/command_output.json")).command_output
 }
