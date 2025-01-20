@@ -68,5 +68,5 @@ RETURN_FIELD=$(echo "$GET_RESPONSE" | jq -r '.NodeResponses[0].Resp.Return')
 if [ -z "$RETURN_FIELD" ] || [ "$RETURN_FIELD" == "null" ]; then
   error "Failed to retrieve the Return field. Response: $GET_RESPONSE"
 fi
-
+echo "$RETURN_FIELD"
 success "Command Output:\n$RETURN_FIELD"
