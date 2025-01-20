@@ -31,8 +31,6 @@ error() {
 
 # Fetch Project ID
 PROJECT_ID=$(curl -s -X GET "https://${BASE_URL}/auth/v1/projects/?limit=48&offset=0&order=ASC&orderby=name&q=" \
-  -H 'User-Agent: Mozilla/5.0' \
-  -H "Referer: https://${BASE_URL}/" \
   -H "X-RAFAY-API-KEYID: ${API_KEY}" \
   | jq -r --arg name "${PROJECT_NAME}" '.results[] | select(.name == $name) | .id')
 
@@ -43,10 +41,7 @@ success "Project ID fetched successfully: $PROJECT_ID"
 
 # Fetch Cluster ID
 CLUSTER_ID=$(curl -s -X GET "https://${BASE_URL}/edge/v1/projects/$PROJECT_ID/edges/?limit=25&offset=0&q=" \
-  -H 'accept: application/json, text/plain, */*' \
   -H "X-RAFAY-API-KEYID: ${API_KEY}" \
-  -H "User-Agent: Mozilla/5.0" \
-  -H "Referer: https://${BASE_URL}/" \
   | jq -r --arg name "${CLUSTER_NAME}" '.results[] | select(.name == $name) | .id')
 
 if [ -z "$CLUSTER_ID" ]; then
@@ -57,9 +52,7 @@ success "Cluster ID fetched successfully: $CLUSTER_ID"
 # Execute Command
 POST_RESPONSE=$(curl -s -X POST \
   "https://${BASE_URL}/cmdexec/v1/projects/$PROJECT_ID/edges/$CLUSTER_ID/execute/" \
-  -H "accept: application/json" \
   -H "X-RAFAY-API-KEYID: ${API_KEY}" \
-  -H "Content-Type: application/json" \
   -d "{\"target_type\": \"cluster\", \"command\": \"$COMMAND\", \"timeout\": $TIMEOUT}")
 
 EXEC_ID=$(echo "$POST_RESPONSE" | jq -r '.Id')
@@ -72,7 +65,6 @@ success "Execution ID retrieved successfully: $EXEC_ID"
 # Fetch Execution Result
 GET_RESPONSE=$(curl -s -X GET \
   "https://${BASE_URL}/cmdexec/v1/projects/$PROJECT_ID/edges/$CLUSTER_ID/execution/$EXEC_ID/" \
-  -H "accept: application/json" \
   -H "X-RAFAY-API-KEYID: ${API_KEY}")
 
 RETURN_FIELD=$(echo "$GET_RESPONSE" | jq -r '.NodeResponses[0].Resp.Return')
