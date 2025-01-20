@@ -35,6 +35,10 @@ install_dependencies() {
       ;;
     alpine)
       echo "Installing curl and jq for Alpine Linux..."
+      if [ "$(id -u)" != "0" ]; then
+        echo "Error: This script must be run as root on Alpine Linux to install dependencies."
+        exit 1
+      fi
       apk add --no-cache curl jq || {
         echo "Error: Failed to install dependencies on Alpine Linux."
         exit 1
