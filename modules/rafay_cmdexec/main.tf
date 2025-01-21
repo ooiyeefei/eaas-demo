@@ -39,22 +39,24 @@ resource "null_resource" "install_dependencies" {
 resource "null_resource" "execute_command" {
   provisioner "local-exec" {
     command = <<EOT
-      PATH="$HOME/bin:$PATH"
-      bash "${path.module}/command_executor.sh" \
+      OUTPUT_DIR="${path.module}/output"
+      mkdir -p "$OUTPUT_DIR"
+      OUTPUT_FILE="$OUTPUT_DIR/output.txt"
+
+      bash "${path.module}/your_script.sh" \
         "${var.base_url}" \
         "${var.api_key}" \
         "${var.project_name}" \
         "${var.cluster_name}" \
         "${var.command}" \
-        "${var.timeout}"
+        "${var.timeout}" \
+        "$OUTPUT_FILE"
     EOT
-   interpreter = ["/bin/bash", "-c"]
+    interpreter = ["/bin/bash", "-c"]
   }
 
-  depends_on = [null_resource.install_dependencies]
-
   triggers = {
-    command_trigger = timestamp()
+    always_run = timestamp()
     base_url        = var.base_url
     api_key         = var.api_key
     project_name    = var.project_name
@@ -63,3 +65,9 @@ resource "null_resource" "execute_command" {
     timeout         = var.timeout
   }
 }
+
+data "local_file" "command_output" {
+  depends_on = [null_resource.execute_command]
+  filename   = "${path.module}/output/output.txt"
+}
+
