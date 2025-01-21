@@ -1,9 +1,27 @@
-resource "rafay_download_kubeconfig" "tfkubeconfig" {
-  cluster            = var.cluster_name
-  output_folder_path = "/tmp"
-  filename           = "kubeconfig.yaml"
+# Resource to create a custom directory for kubeconfig
+resource "null_resource" "create_kubeconfig_directory" {
+  provisioner "local-exec" {
+    command = <<EOT
+      mkdir -p "${path.module}/kubeconfig_dir"
+      echo "Created directory ${path.module}/kubeconfig_dir"
+    EOT
+  }
+
+  triggers = {
+    always_run = timestamp()
+  }
 }
 
+# Resource to download the kubeconfig
+resource "rafay_download_kubeconfig" "tfkubeconfig" {
+  depends_on = [null_resource.create_kubeconfig_directory]
+
+  cluster            = var.cluster_name
+  output_folder_path = "${path.module}/kubeconfig_dir"
+  filename           = "kubeconfig"
+}
+
+# Resource to install kubectl
 resource "null_resource" "install_kubectl" {
   provisioner "local-exec" {
     command = <<EOT
@@ -20,6 +38,7 @@ resource "null_resource" "install_kubectl" {
   }
 }
 
+# Resource to execute kubectl commands
 resource "null_resource" "kubectl_cmds" {
   depends_on = [
     rafay_download_kubeconfig.tfkubeconfig,
@@ -27,8 +46,11 @@ resource "null_resource" "kubectl_cmds" {
   ]
 
   provisioner "local-exec" {
-    interpreter = ["/bin/bash", "-c"]
-    command     = "export PATH=\"$HOME/bin:$PATH\" && kubectl --kubeconfig=/tmp/kubeconfig.yaml get pods -A > \"${path.module}/kubectl_output.txt\""
+    command = <<EOT
+      export PATH="$HOME/bin:$PATH"
+      export KUBECONFIG=${path.module}/kubeconfig_dir/kubeconfig
+      kubectl get pods -A > "${path.module}/kubectl_output.txt"
+    EOT
   }
 
   triggers = {
@@ -37,8 +59,8 @@ resource "null_resource" "kubectl_cmds" {
   }
 }
 
+# Data source to read kubectl output
 data "local_file" "kubectl_output" {
   depends_on = [null_resource.kubectl_cmds]
   filename   = "${path.module}/kubectl_output.txt"
 }
-
