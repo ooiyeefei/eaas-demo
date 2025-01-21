@@ -30,7 +30,7 @@ error() {
   exit 1
 }
 
-PROJECT_ID=$(curl -s -X GET "https://${BASE_URL}/auth/v1/projects/?limit=48&offset=0&order=ASC&orderby=name&q=" \
+PROJECT_ID=$(curl -s -X GET "https://${BASE_URL}/auth/v1/projects/?limit=1000&offset=0&order=ASC&orderby=name&q=" \
   -H "X-RAFAY-API-KEYID: ${API_KEY}" \
   | jq -r --arg name "${PROJECT_NAME}" '.results[] | select(.name == $name) | .id')
 
