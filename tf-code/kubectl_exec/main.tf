@@ -1,7 +1,6 @@
 resource "rafay_download_kubeconfig" "tfkubeconfig" {
   cluster            = var.cluster_name
-  output_folder_path = "/tmp"
-  filename           = "kubeconfig"
+  filename           = "kubeconfig.yaml"
 }
 
 resource "null_resource" "install_kubectl" {
@@ -34,7 +33,7 @@ resource "null_resource" "kubectl_cmds" {
         echo "Error: Kubeconfig file not found at /tmp/kubeconfig"
         exit 1
       fi
-      kubectl --kubeconfig=/tmp/kubeconfig get pods -A > "${path.module}/kubectl_output.txt"
+      kubectl --kubeconfig=kubeconfig.yaml get pods -A > "${path.module}/kubectl_output.txt"
     EOT
   }
 
