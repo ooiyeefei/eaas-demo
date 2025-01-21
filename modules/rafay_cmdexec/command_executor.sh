@@ -69,9 +69,10 @@ if [ -z "$RETURN_FIELD" ] || [ "$RETURN_FIELD" == "null" ]; then
   error "Failed to retrieve the Return field. Response: $GET_RESPONSE"
 fi
 
-CLEAN_RETURN_FIELD=$(echo "$RETURN_FIELD" | sed -r "s/\x1b\[[0-9;]*m//g" | tr -d '\r')
+echo "{\"command_output\": $RETURN_FIELD}"
 
-ESCAPED_RETURN_FIELD=$(echo "$CLEAN_RETURN_FIELD" | jq -Rs '.')
+# CLEAN_RETURN_FIELD=$(echo "$RETURN_FIELD" | sed -r "s/\x1b\[[0-9;]*m//g" | tr -d '\r')
 
-echo "{\"command_output\": $ESCAPED_RETURN_FIELD}"
-exit 0
+# ESCAPED_RETURN_FIELD=$(echo "$CLEAN_RETURN_FIELD" | jq -Rs '.')
+
+
