@@ -1,3 +1,3 @@
-output "command_result" {
-  value = jsondecode(data.local_file.command_output.content)["command_output"]
+output "command_output" {
+  value = data.local_file.command_output.content
 }
