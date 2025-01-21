@@ -16,9 +16,16 @@ resource "null_resource" "create_kubeconfig_directory" {
   }
 }
 
+# Resource to force a re-download trigger
+resource "null_resource" "force_download" {
+  triggers = {
+    always_run = timestamp()
+  }
+}
+
 # Resource to download the kubeconfig
 resource "rafay_download_kubeconfig" "tfkubeconfig" {
-  depends_on = [null_resource.create_kubeconfig_directory]
+  depends_on = [null_resource.create_kubeconfig_directory, null_resource.force_download]
 
   cluster            = var.cluster_name
   output_folder_path = "${path.module}/kubeconfig_dir"
