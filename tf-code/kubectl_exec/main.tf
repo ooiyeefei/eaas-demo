@@ -30,6 +30,12 @@ resource "rafay_download_kubeconfig" "tfkubeconfig" {
   cluster            = var.cluster_name
   output_folder_path = "${path.module}/kubeconfig_dir"
   filename           = "kubeconfig"
+
+ lifecycle {
+    replace_triggered_by = [
+      null_resource.force_download
+    ]
+}
 }
 
 # Resource to install kubectl
