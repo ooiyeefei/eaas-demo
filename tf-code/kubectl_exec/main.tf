@@ -4,7 +4,6 @@ resource "rafay_download_kubeconfig" "tfkubeconfig" {
   filename           = "kubeconfig"
 }
 
-
 resource "null_resource" "install_kubectl" {
   provisioner "local-exec" {
     command = <<EOT
@@ -28,12 +27,10 @@ resource "null_resource" "kubectl_cmds" {
   ]
 
   provisioner "local-exec" {
+    interpreter = ["/bin/bash", "-c"]
     command = <<EOT
       export PATH="$HOME/bin:$PATH"
-      export KUBECONFIG=/tmp/kubeconfig
-      echo "Using KUBECONFIG=$KUBECONFIG"
-      cat $KUBECONFIG
-      kubectl get pods -A > "${path.module}/kubectl_output.txt"
+      kubectl --kubeconfig=/tmp/kubeconfig get pods -A > "${path.module}/kubectl_output.txt"
     EOT
   }
 
