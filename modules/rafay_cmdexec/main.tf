@@ -39,7 +39,7 @@ resource "null_resource" "install_dependencies" {
 resource "null_resource" "execute_command" {
   provisioner "local-exec" {
     command = <<EOT
-      OUTPUT_DIR="${path.module}/output"
+      OUTPUT_DIR="./output"
       mkdir -p "$OUTPUT_DIR"
       OUTPUT_FILE="$OUTPUT_DIR/output.txt"
 
@@ -68,6 +68,6 @@ resource "null_resource" "execute_command" {
 
 data "local_file" "command_output" {
   depends_on = [null_resource.execute_command]
-  filename   = "${path.module}/output/output.txt"
+  filename   = "./output/output.txt"
 }
 
