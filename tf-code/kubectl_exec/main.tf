@@ -26,15 +26,8 @@ resource "null_resource" "kubectl_cmds" {
   ]
 
   provisioner "local-exec" {
-    interpreter = ["/bin/bash", "-c"]
-    command = <<EOT
-      export PATH="$HOME/bin:$PATH"
-      if [ ! -f /tmp/kubeconfig ]; then
-        echo "Error: Kubeconfig file not found at /tmp/kubeconfig"
-        exit 1
-      fi
+      interpreter = ["/bin/bash", "-c"]
       kubectl --kubeconfig=kubeconfig.yaml get pods -A > "${path.module}/kubectl_output.txt"
-    EOT
   }
 
   triggers = {
