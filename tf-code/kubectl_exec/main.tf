@@ -30,6 +30,10 @@ resource "null_resource" "kubectl_cmds" {
     interpreter = ["/bin/bash", "-c"]
     command = <<EOT
       export PATH="$HOME/bin:$PATH"
+      if [ ! -f /tmp/kubeconfig ]; then
+        echo "Error: Kubeconfig file not found at /tmp/kubeconfig"
+        exit 1
+      fi
       kubectl --kubeconfig=/tmp/kubeconfig get pods -A > "${path.module}/kubectl_output.txt"
     EOT
   }
@@ -44,3 +48,4 @@ data "local_file" "kubectl_output" {
   depends_on = [null_resource.kubectl_cmds]
   filename   = "${path.module}/kubectl_output.txt"
 }
+
