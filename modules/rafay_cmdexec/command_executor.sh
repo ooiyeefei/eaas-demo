@@ -7,7 +7,7 @@ RESET="\033[0m" # Reset to default color
 
 # Validate arguments
 if [ "$#" -lt 5 ]; then
-  echo -e "${RED}Usage: $0 <BASE_URL> <API_KEY> <PROJECT_NAME> <CLUSTER_NAME> <COMMAND> [TIMEOUT]${RESET}"
+  echo -e "${RED}Usage: $0 <BASE_URL> <API_KEY> <PROJECT_NAME> <CLUSTER_NAME> <COMMAND> [TIMEOUT]<OUTPUT_FILE>${RESET}"
   exit 1
 fi
 
@@ -17,6 +17,7 @@ PROJECT_NAME="$3"
 CLUSTER_NAME="$4"
 COMMAND="$5"
 TIMEOUT="${6:-120}" 
+OUTPUT_FILE="$7"
 
 # Function to handle success output
 success() {
@@ -70,6 +71,7 @@ if [ -z "$RETURN_FIELD" ] || [ "$RETURN_FIELD" == "null" ]; then
 fi
 
 echo "{\"command_output\": $RETURN_FIELD}"
+echo "{\"command_output\": \"$RETURN_FIELD\"}" > "${OUTPUT_FILE}"
 
 # CLEAN_RETURN_FIELD=$(echo "$RETURN_FIELD" | sed -r "s/\x1b\[[0-9;]*m//g" | tr -d '\r')
 
