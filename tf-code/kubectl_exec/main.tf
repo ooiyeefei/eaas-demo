@@ -27,7 +27,7 @@ resource "null_resource" "kubectl_cmds" {
   provisioner "local-exec" {
     command = <<EOT
       export KUBECONFIG=/tmp/kubeconfig
-      kubectl get pods -A
+      kubectl get pods -A  > "${path.module}/kubectl_output.txt"
     EOT
   }
 
@@ -35,4 +35,9 @@ resource "null_resource" "kubectl_cmds" {
     command_trigger = timestamp()
     cluster_name    = var.cluster_name
   }
+}
+
+data "local_file" "kubectl_output" {
+  depends_on = [null_resource.kubectl_cmds]
+  filename   = "${path.module}/kubectl_output.txt"
 }
