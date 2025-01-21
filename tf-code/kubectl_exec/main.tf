@@ -31,6 +31,8 @@ resource "null_resource" "kubectl_cmds" {
     command = <<EOT
       export PATH="$HOME/bin:$PATH"
       export KUBECONFIG=/tmp/kubeconfig
+      echo "Using KUBECONFIG=$KUBECONFIG"
+      cat $KUBECONFIG
       kubectl get pods -A > "${path.module}/kubectl_output.txt"
     EOT
   }
