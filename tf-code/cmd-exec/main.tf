@@ -8,4 +8,9 @@ module "rafay_exec" {
   timeout       = var.timeout
 }
 
+output "rafay_command_output" {
+  value = module.rafay_exec.command_output
+  description = "The output of the command executed by the rafay_exec module."
+}
+
 
