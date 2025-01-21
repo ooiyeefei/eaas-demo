@@ -2,8 +2,12 @@
 resource "null_resource" "create_kubeconfig_directory" {
   provisioner "local-exec" {
     command = <<EOT
-      mkdir -p "${path.module}/kubeconfig_dir"
-      echo "Created directory ${path.module}/kubeconfig_dir"
+      if [ ! -d "${path.module}/kubeconfig_dir" ]; then
+        mkdir -p "${path.module}/kubeconfig_dir"
+        echo "Created directory ${path.module}/kubeconfig_dir"
+      else
+        echo "Directory ${path.module}/kubeconfig_dir already exists"
+      fi
     EOT
   }
 
