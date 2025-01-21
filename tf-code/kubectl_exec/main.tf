@@ -1,5 +1,6 @@
 resource "rafay_download_kubeconfig" "tfkubeconfig" {
   cluster            = var.cluster_name
+  output_folder_path = "/tmp"
   filename           = "kubeconfig.yaml"
 }
 
@@ -27,7 +28,7 @@ resource "null_resource" "kubectl_cmds" {
 
   provisioner "local-exec" {
     interpreter = ["/bin/bash", "-c"]
-    command     = "./kubectl --kubeconfig kubeconfig.yaml get pods -A > \"${path.module}/kubectl_output.txt\""
+    command     = "export PATH=\"$HOME/bin:$PATH\" && kubectl --kubeconfig=/tmp/kubeconfig get pods -A > \"${path.module}/kubectl_output.txt\""
   }
 
   triggers = {
