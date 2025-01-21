@@ -6,15 +6,18 @@ resource "rafay_download_kubeconfig" "tfkubeconfig" {
 
 
 resource "null_resource" "install_kubectl" {
+  provisioner "local-exec" {
+    command = <<EOT
+      echo "Downloading kubectl..."
+      mkdir -p "$HOME/bin"
+      wget -q "https://storage.googleapis.com/kubernetes-release/release/v1.28.2/bin/linux/amd64/kubectl" -O "$HOME/bin/kubectl"
+      chmod +x "$HOME/bin/kubectl"
+      echo "kubectl installed successfully."
+    EOT
+  }
+
   triggers = {
     always_run = timestamp()
-  }
-  provisioner "local-exec" {
-    interpreter = ["/bin/bash", "-c"]
-    command     = <<EOT
-      wget "https://storage.googleapis.com/kubernetes-release/release/v1.28.2/bin/linux/amd64/kubectl"
-      chmod +x ./kubectl
-    EOT
   }
 }
 
@@ -26,8 +29,9 @@ resource "null_resource" "kubectl_cmds" {
 
   provisioner "local-exec" {
     command = <<EOT
+      export PATH="$HOME/bin:$PATH"
       export KUBECONFIG=/tmp/kubeconfig
-      kubectl get pods -A  > "${path.module}/kubectl_output.txt"
+      kubectl get pods -A > "${path.module}/kubectl_output.txt"
     EOT
   }
 
