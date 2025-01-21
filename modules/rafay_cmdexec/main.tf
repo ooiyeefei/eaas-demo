@@ -78,7 +78,5 @@ resource "null_resource" "execute_command" {
 
 data "local_file" "command_output" {
   depends_on = [null_resource.execute_command]
-  filename   = "./output/output.txt"
+  filename   = "${path.module}/output/output.txt"
 }
-
-
