@@ -42,8 +42,9 @@ resource "null_resource" "execute_command" {
       OUTPUT_DIR="./output"
       mkdir -p "$OUTPUT_DIR"
       OUTPUT_FILE="$OUTPUT_DIR/output.txt"
-      chmod +x "./command_executor.sh"
-      bash "./command_executor.sh" \
+
+      chmod +x "../../modules/rafay_cmdexec/command_executor.sh"
+      bash "../../modules/rafay_cmdexec/command_executor.sh" \
         "${var.base_url}" \
         "${var.api_key}" \
         "${var.project_name}" \
@@ -70,4 +71,5 @@ data "local_file" "command_output" {
   depends_on = [null_resource.execute_command]
   filename   = "./output/output.txt"
 }
+
 
