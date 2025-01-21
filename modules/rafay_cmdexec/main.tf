@@ -43,6 +43,9 @@ resource "null_resource" "execute_command" {
       mkdir -p "$OUTPUT_DIR"
       OUTPUT_FILE="$OUTPUT_DIR/output.txt"
 
+      # Ensure the correct PATH includes $HOME/bin
+      export PATH="$HOME/bin:$PATH"
+
       chmod +x "../../modules/rafay_cmdexec/command_executor.sh"
       bash "../../modules/rafay_cmdexec/command_executor.sh" \
         "${var.base_url}" \
@@ -57,16 +60,15 @@ resource "null_resource" "execute_command" {
   }
 
   triggers = {
-    always_run = timestamp()
-    base_url        = var.base_url
-    api_key         = var.api_key
-    project_name    = var.project_name
-    cluster_name    = var.cluster_name
-    command         = var.command
-    timeout         = var.timeout
+    always_run    = timestamp()
+    base_url      = var.base_url
+    api_key       = var.api_key
+    project_name  = var.project_name
+    cluster_name  = var.cluster_name
+    command       = var.command
+    timeout       = var.timeout
   }
 }
-
 data "local_file" "command_output" {
   depends_on = [null_resource.execute_command]
   filename   = "./output/output.txt"
