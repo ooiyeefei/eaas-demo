@@ -26,8 +26,8 @@ resource "null_resource" "kubectl_cmds" {
   ]
 
   provisioner "local-exec" {
-      interpreter = ["/bin/bash", "-c"]
-      kubectl --kubeconfig=kubeconfig.yaml get pods -A > "${path.module}/kubectl_output.txt"
+    interpreter = ["/bin/bash", "-c"]
+    command     = "./kubectl --kubeconfig kubeconfig.yaml get pods -A > \"${path.module}/kubectl_output.txt\""
   }
 
   triggers = {
