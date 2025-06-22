@@ -53,7 +53,11 @@ resource "helm_release" "v2-infra" {
   lifecycle {
     ignore_changes = [
       # Avoid reapplying helm release
-      values
+      values,
+      version,
+      revision,
+      app_version,
+      metadata,
     ]
   }
 }
