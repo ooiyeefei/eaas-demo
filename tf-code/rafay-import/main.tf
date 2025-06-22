@@ -55,8 +55,6 @@ resource "helm_release" "v2-infra" {
       # Avoid reapplying helm release
       values,
       version,
-      revision,
-      app_version,
       metadata,
     ]
   }
