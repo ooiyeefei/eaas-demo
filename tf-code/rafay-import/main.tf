@@ -54,8 +54,7 @@ resource "helm_release" "v2-infra" {
     ignore_changes = [
       # Avoid reapplying helm release
       values,
-      version,
-      metadata,
+      version
     ]
   }
 }
